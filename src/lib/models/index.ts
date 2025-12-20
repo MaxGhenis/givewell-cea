@@ -26,6 +26,11 @@ import {
   BENCHMARK_VALUE_PER_DOLLAR as NI_BENCHMARK,
 } from "./new-incentives";
 import {
+  calculateGiveDirectly,
+  type GiveDirectlyInputs,
+  BENCHMARK_VALUE_PER_DOLLAR as GD_BENCHMARK,
+} from "./givedirectly";
+import {
   type MoralWeights,
   getAge5PlusMoralWeight,
 } from "../moral-weights";
@@ -33,7 +38,7 @@ import {
 export { DEFAULT_MORAL_WEIGHTS, MORAL_WEIGHT_PRESETS } from "../moral-weights";
 export type { MoralWeights, MoralWeightPreset } from "../moral-weights";
 
-export type CharityType = "amf" | "malaria-consortium" | "helen-keller" | "new-incentives";
+export type CharityType = "amf" | "malaria-consortium" | "helen-keller" | "new-incentives" | "givedirectly";
 
 export interface UnifiedResults {
   /** Number of children/people reached */
@@ -91,6 +96,14 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     color: "#48B89F",
     description: "Uses cash incentives to increase childhood vaccination rates",
     logoUrl: "https://cdn.prod.website-files.com/5f7c51bf9fac9b5ed62aa37b/5f7c51bf9fac9b49b12aa3f0_Group%20345.svg",
+  },
+  {
+    name: "GiveDirectly",
+    abbrev: "GD",
+    type: "givedirectly",
+    color: "#F5A623",
+    description: "Provides unconditional cash transfers directly to people in poverty",
+    logoUrl: "https://cdn.prod.website-files.com/5bec3c85cd9b920d3af2f0a8/5bec3c85cd9b92b19ff2f0b7_gd-logo-orange.svg",
   },
 ];
 
@@ -157,11 +170,30 @@ export const DEFAULT_NI_INPUTS: NewIncentivesInputs = {
   adjustmentFunging: -0.0934652923,
 };
 
+// GiveDirectly defaults based on Kenya (GiveWell November 2024)
+export const DEFAULT_GD_INPUTS: GiveDirectlyInputs = {
+  grantSize: 1_000_000,
+  transferAmount: 1000,
+  overheadRate: 0.20,
+  baselineConsumption: 652, // Kenya PPP 2017
+  consumptionPersistenceYears: 10,
+  discountRate: 0.04,
+  spilloverMultiplier: 2.5,
+  spilloverDiscount: 0.45,
+  mortalityEffect: 0.23,
+  under5MortalityRate: 0.05,
+  householdSize: 5,
+  proportionUnder5: 0.15,
+  moralWeightUnder5: 116.25,
+  mortalityDiscount: 0.50,
+};
+
 export type CharityInputs =
   | { type: "amf"; inputs: AMFInputs }
   | { type: "malaria-consortium"; inputs: MalariaConsortiumInputs }
   | { type: "helen-keller"; inputs: HelenKellerInputs }
-  | { type: "new-incentives"; inputs: NewIncentivesInputs };
+  | { type: "new-incentives"; inputs: NewIncentivesInputs }
+  | { type: "givedirectly"; inputs: GiveDirectlyInputs };
 
 /**
  * Calculate cost-effectiveness for any charity and return unified results
@@ -212,6 +244,22 @@ export function calculateCharity(charity: CharityInputs): UnifiedResults {
         benchmarkValue: NI_BENCHMARK,
       };
     }
+    case "givedirectly": {
+      const results = calculateGiveDirectly(charity.inputs);
+      // GiveDirectly doesn't focus on deaths averted as primary metric
+      // but we include mortality benefits in the calculation
+      const costPerDeathAverted = results.deathsAvertedUnder5 > 0
+        ? charity.inputs.grantSize / results.deathsAvertedUnder5
+        : Infinity;
+      return {
+        peopleReached: results.peopleReached,
+        deathsAvertedUnder5: results.deathsAvertedUnder5,
+        costPerDeathAverted,
+        initialXBenchmark: results.xBenchmark, // No separate initial/final for GD
+        finalXBenchmark: results.xBenchmark,
+        benchmarkValue: GD_BENCHMARK,
+      };
+    }
   }
 }
 
@@ -228,6 +276,8 @@ export function getDefaultInputs(type: CharityType): CharityInputs {
       return { type: "helen-keller", inputs: { ...DEFAULT_HK_INPUTS } };
     case "new-incentives":
       return { type: "new-incentives", inputs: { ...DEFAULT_NI_INPUTS } };
+    case "givedirectly":
+      return { type: "givedirectly", inputs: { ...DEFAULT_GD_INPUTS } };
   }
 }
 
@@ -271,6 +321,14 @@ export function applyMoralWeights(
     case "new-incentives":
       return {
         type: "new-incentives",
+        inputs: {
+          ...charityInputs.inputs,
+          moralWeightUnder5: moralWeights.under5,
+        },
+      };
+    case "givedirectly":
+      return {
+        type: "givedirectly",
         inputs: {
           ...charityInputs.inputs,
           moralWeightUnder5: moralWeights.under5,

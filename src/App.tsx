@@ -12,6 +12,7 @@ import {
   DEFAULT_MC_INPUTS,
   DEFAULT_HK_INPUTS,
   DEFAULT_NI_INPUTS,
+  DEFAULT_GD_INPUTS,
   DEFAULT_MORAL_WEIGHTS,
   MORAL_WEIGHT_PRESETS,
 } from "./lib/models";
@@ -19,6 +20,7 @@ import type { AMFInputs } from "./lib/models/amf";
 import type { MalariaConsortiumInputs } from "./lib/models/malaria-consortium";
 import type { HelenKellerInputs } from "./lib/models/helen-keller";
 import type { NewIncentivesInputs } from "./lib/models/new-incentives";
+import type { GiveDirectlyInputs } from "./lib/models/givedirectly";
 import {
   runCharityMonteCarlo,
   type MonteCarloResults,
@@ -523,6 +525,104 @@ function NIParams({ inputs, onChange }: { inputs: NewIncentivesInputs; onChange:
   );
 }
 
+function GDParams({ inputs, onChange }: { inputs: GiveDirectlyInputs; onChange: (key: keyof GiveDirectlyInputs, value: number) => void }) {
+  return (
+    <>
+      <div className="params-section">
+        <h4>Transfer Parameters</h4>
+        <div className="param-grid">
+          <InputField
+            label="Grant size"
+            value={inputs.grantSize}
+            onChange={(v) => onChange("grantSize", v)}
+            min={100000}
+            max={10000000}
+            step={100000}
+            format="currency"
+          />
+          <InputField
+            label="Transfer per household"
+            value={inputs.transferAmount}
+            onChange={(v) => onChange("transferAmount", v)}
+            min={500}
+            max={2000}
+            step={50}
+            format="currency"
+          />
+          <InputField
+            label="Overhead rate"
+            value={inputs.overheadRate}
+            onChange={(v) => onChange("overheadRate", v)}
+            min={0.1}
+            max={0.4}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Baseline consumption (PPP)"
+            value={inputs.baselineConsumption}
+            onChange={(v) => onChange("baselineConsumption", v)}
+            min={300}
+            max={1000}
+            step={10}
+            format="currency"
+          />
+          <InputField
+            label="Consumption persistence (years)"
+            value={inputs.consumptionPersistenceYears}
+            onChange={(v) => onChange("consumptionPersistenceYears", v)}
+            min={1}
+            max={20}
+            step={1}
+            format="number"
+          />
+        </div>
+      </div>
+      <div className="params-section">
+        <h4>Effect Multipliers</h4>
+        <div className="param-grid">
+          <InputField
+            label="Spillover multiplier"
+            value={inputs.spilloverMultiplier}
+            onChange={(v) => onChange("spilloverMultiplier", v)}
+            min={1}
+            max={4}
+            step={0.1}
+            format="decimal"
+          />
+          <InputField
+            label="Spillover discount"
+            value={inputs.spilloverDiscount}
+            onChange={(v) => onChange("spilloverDiscount", v)}
+            min={0}
+            max={0.8}
+            step={0.05}
+            format="percent"
+          />
+          <InputField
+            label="Mortality effect"
+            value={inputs.mortalityEffect}
+            onChange={(v) => onChange("mortalityEffect", v)}
+            min={0}
+            max={0.5}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Mortality discount"
+            value={inputs.mortalityDiscount}
+            onChange={(v) => onChange("mortalityDiscount", v)}
+            min={0}
+            max={0.8}
+            step={0.05}
+            format="percent"
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
 interface MoralWeightsPanelProps {
   weights: MoralWeights;
   onChange: (weights: MoralWeights) => void;
@@ -678,6 +778,12 @@ function CharityCard({
     }
   }, [charityInputs, onInputChange]);
 
+  const handleGDChange = useCallback((key: keyof GiveDirectlyInputs, value: number) => {
+    if (charityInputs.type === "givedirectly") {
+      onInputChange({ type: "givedirectly", inputs: { ...charityInputs.inputs, [key]: value } });
+    }
+  }, [charityInputs, onInputChange]);
+
   return (
     <div className="charity-card">
       <div className="charity-header" style={{ borderLeftColor: config.color }}>
@@ -776,6 +882,9 @@ function CharityCard({
           {charityInputs.type === "new-incentives" && (
             <NIParams inputs={charityInputs.inputs} onChange={handleNIChange} />
           )}
+          {charityInputs.type === "givedirectly" && (
+            <GDParams inputs={charityInputs.inputs} onChange={handleGDChange} />
+          )}
         </div>
       )}
     </div>
@@ -828,6 +937,7 @@ function App() {
       "malaria-consortium": { type: "malaria-consortium", inputs: { ...DEFAULT_MC_INPUTS } },
       "helen-keller": { type: "helen-keller", inputs: { ...DEFAULT_HK_INPUTS } },
       "new-incentives": { type: "new-incentives", inputs: { ...DEFAULT_NI_INPUTS } },
+      "givedirectly": { type: "givedirectly", inputs: { ...DEFAULT_GD_INPUTS } },
     });
     setMoralWeights({ ...DEFAULT_MORAL_WEIGHTS });
   }, []);
@@ -997,7 +1107,7 @@ function App() {
                     .toFixed(0)}
                 </span>
                 <span className="stat-label">
-                  Total deaths averted per $4M
+                  Total deaths averted per $5M
                 </span>
               </div>
             </div>
@@ -1013,8 +1123,8 @@ function App() {
             <h3>About This Tool</h3>
             <p>
               An independent, open-source calculator replicating GiveWell's
-              cost-effectiveness methodology for their top 4 charities
-              (November 2025 CEA):
+              cost-effectiveness methodology for their top charities
+              (November 2024-2025 CEA):
             </p>
             <ul className="charity-list">
               {CHARITY_CONFIGS.map((config) => (
@@ -1033,7 +1143,7 @@ function App() {
             <p>
               Each charity uses a different calculation model with unique
               parameters validated against GiveWell's published spreadsheets
-              with 75+ tests.
+              with 120+ tests.
             </p>
             <a
               href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness"

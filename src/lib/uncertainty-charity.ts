@@ -21,6 +21,7 @@ import type { AMFInputs } from "./models/amf";
 import type { MalariaConsortiumInputs } from "./models/malaria-consortium";
 import type { HelenKellerInputs } from "./models/helen-keller";
 import type { NewIncentivesInputs } from "./models/new-incentives";
+import type { GiveDirectlyInputs } from "./models/givedirectly";
 
 /**
  * Configuration for uncertainty ranges.
@@ -202,6 +203,46 @@ function sampleNIInputs(
 }
 
 /**
+ * Sample GiveDirectly inputs with uncertainty
+ */
+function sampleGDInputs(
+  baseInputs: GiveDirectlyInputs,
+  config: UncertaintyConfig
+): GiveDirectlyInputs {
+  return {
+    ...baseInputs,
+    transferAmount: sampleLogNormal(
+      baseInputs.transferAmount,
+      baseInputs.transferAmount * (1 - config.costPerReached),
+      baseInputs.transferAmount * (1 + config.costPerReached)
+    ),
+    overheadRate: sampleTruncatedNormal(
+      baseInputs.overheadRate,
+      baseInputs.overheadRate * config.adjustments,
+      0.1,
+      0.4
+    ),
+    baselineConsumption: sampleLogNormal(
+      baseInputs.baselineConsumption,
+      baseInputs.baselineConsumption * (1 - config.costPerReached),
+      baseInputs.baselineConsumption * (1 + config.costPerReached)
+    ),
+    spilloverMultiplier: sampleTruncatedNormal(
+      baseInputs.spilloverMultiplier,
+      baseInputs.spilloverMultiplier * config.adjustments,
+      1.5,
+      4.0
+    ),
+    mortalityEffect: sampleTruncatedNormal(
+      baseInputs.mortalityEffect,
+      baseInputs.mortalityEffect * config.interventionEffect,
+      0.05,
+      0.5
+    ),
+  };
+}
+
+/**
  * Run Monte Carlo simulation for a charity's cost-effectiveness
  */
 export function runCharityMonteCarlo(
@@ -231,6 +272,11 @@ export function runCharityMonteCarlo(
           type: "new-incentives",
           inputs: sampleNIInputs(charityInputs.inputs, config),
         };
+      case "givedirectly":
+        return {
+          type: "givedirectly",
+          inputs: sampleGDInputs(charityInputs.inputs, config),
+        };
     }
   };
 
@@ -249,6 +295,7 @@ export interface AllCharitiesMonteCarloResults {
   "malaria-consortium": MonteCarloResults;
   "helen-keller": MonteCarloResults;
   "new-incentives": MonteCarloResults;
+  givedirectly: MonteCarloResults;
 }
 
 /**
@@ -273,6 +320,11 @@ export function runAllCharitiesMonteCarlo(
     ),
     "new-incentives": runCharityMonteCarlo(
       allInputs["new-incentives"],
+      numSimulations,
+      config
+    ),
+    givedirectly: runCharityMonteCarlo(
+      allInputs.givedirectly,
       numSimulations,
       config
     ),
