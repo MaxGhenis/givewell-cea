@@ -47,7 +47,26 @@ function EditableValue({ value, onChange, format, min, max, step = 0.01, label, 
   };
 
   const handleClick = () => {
-    const editValue = format === "percent" ? (value * 100).toFixed(2) : value.toString();
+    let editValue: string;
+    switch (format) {
+      case "percent":
+        editValue = (value * 100).toFixed(2);
+        break;
+      case "currency":
+        editValue = value.toFixed(0);
+        break;
+      case "currencySmall":
+        editValue = value.toFixed(2);
+        break;
+      case "decimal":
+        editValue = value.toFixed(3);
+        break;
+      case "number":
+        editValue = value.toFixed(0);
+        break;
+      default:
+        editValue = value.toString();
+    }
     setInputValue(editValue);
     setIsEditing(true);
   };
