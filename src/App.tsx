@@ -35,8 +35,8 @@ function formatNumber(n: number, decimals = 1): string {
   return n.toFixed(decimals);
 }
 
-function formatCurrency(n: number): string {
-  return `$${formatNumber(n, 0)}`;
+function formatCurrency(n: number, decimals = 1): string {
+  return `$${formatNumber(n, decimals)}`;
 }
 
 interface InputFieldProps {
