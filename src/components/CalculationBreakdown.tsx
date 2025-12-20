@@ -22,10 +22,11 @@ interface EditableValueProps {
   min?: number;
   max?: number;
   step?: number;
+  label: string;  // Required label shown below the value
   source?: { text: string; url?: string };
 }
 
-function EditableValue({ value, onChange, format, min, max, step = 0.01, source }: EditableValueProps) {
+function EditableValue({ value, onChange, format, min, max, step = 0.01, label, source }: EditableValueProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -79,16 +80,8 @@ function EditableValue({ value, onChange, format, min, max, step = 0.01, source 
 
   const inputStep = format === "percent" ? (step || 0.01) * 100 : step;
 
-  // Get a short label from the source text (first few words or abbreviation)
-  const getShortLabel = (text: string) => {
-    // Return first ~20 chars or first 3 words
-    const words = text.split(" ");
-    if (words.length <= 3) return text;
-    return words.slice(0, 3).join(" ") + "…";
-  };
-
   return (
-    <span className="editable-value-wrapper">
+    <span className="editable-value-wrapper" title={source?.text || label}>
       {isEditing ? (
         <input
           ref={inputRef}
@@ -101,19 +94,15 @@ function EditableValue({ value, onChange, format, min, max, step = 0.01, source 
           step={inputStep}
         />
       ) : (
-        <span className="editable-display" onClick={handleClick} title="Click to edit">{displayValue()}</span>
+        <span className="editable-display" onClick={handleClick}>{displayValue()}</span>
       )}
-      {source && (
-        <span className="param-label" title={source.text}>
-          {source.url ? (
-            <a href={source.url} target="_blank" rel="noopener noreferrer">
-              {getShortLabel(source.text)}
-            </a>
-          ) : (
-            getShortLabel(source.text)
-          )}
-        </span>
-      )}
+      <span className="value-label">
+        {source?.url ? (
+          <a href={source.url} target="_blank" rel="noopener noreferrer">{label}</a>
+        ) : (
+          label
+        )}
+      </span>
     </span>
   );
 }
@@ -190,7 +179,7 @@ function AMFBreakdown({
           <div className="step-content">
             <div className="step-title">Children Reached</div>
             <div className="step-formula">
-              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} label="Grant size" />
               {" ÷ "}
               <EditableValue
                 value={inputs.costPerUnder5Reached}
@@ -198,6 +187,7 @@ function AMFBreakdown({
                 format="currencySmall"
                 min={1}
                 max={50}
+                label="Cost per child"
                 source={{ text: "GiveWell Nov 2025 CEA", url: "https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" }}
               />
               {" = "}
@@ -221,6 +211,7 @@ function AMFBreakdown({
                 format="decimal"
                 min={0.5}
                 max={5}
+                label="Coverage yrs"
                 source={{ text: "Years of effective ITN coverage" }}
               />
               {" × "}
@@ -230,6 +221,7 @@ function AMFBreakdown({
                 format="percent"
                 min={0.0001}
                 max={0.01}
+                label="Mortality rate"
                 source={{ text: "Malaria-attributable mortality rate (WHO)" }}
               />
               {" × "}
@@ -239,6 +231,7 @@ function AMFBreakdown({
                 format="percent"
                 min={0.05}
                 max={0.8}
+                label="ITN effect"
                 source={{ text: "Lengeler 2004 Cochrane Review", url: "https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD000363.pub2/full" }}
               />
               {" = "}
@@ -262,6 +255,7 @@ function AMFBreakdown({
                 format="number"
                 min={50}
                 max={200}
+                label="Moral weight"
                 source={{ text: "GiveWell Moral Weights", url: "https://docs.google.com/spreadsheets/d/11HsJLpq0Suf3SK_PmzzWpK1tr_BTd364j0l3xVvSCQw" }}
               />
               {" UoV = "}
@@ -296,16 +290,16 @@ function AMFBreakdown({
             <div className="step-title">Adjustments</div>
             <div className="step-formula adjustments-list">
               <div>
-                × (1 + <EditableValue value={inputs.adjustmentOlderMortalities} onChange={(v) => onInputChange("adjustmentOlderMortalities", v)} format="percent" min={0} max={1} source={{ text: "5+ mortality benefits" }} />) older mortalities
+                × (1 + <EditableValue value={inputs.adjustmentOlderMortalities} onChange={(v) => onInputChange("adjustmentOlderMortalities", v)} format="percent" min={0} max={1} label="5+ deaths" source={{ text: "Benefits to ages 5+ mortality" }} />) older mortalities
               </div>
               <div>
-                × (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={1} source={{ text: "Long-term developmental benefits" }} />) developmental
+                × (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={1} label="Dev. benefits" source={{ text: "Long-term developmental benefits" }} />) developmental
               </div>
               <div>
-                × (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={-0.5} max={1} />) program benefits
+                × (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={-0.5} max={1} label="Program" />) program benefits
               </div>
               <div>
-                × (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.5} max={0.5} /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.5} max={0} />) leverage & funging
+                × (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.5} max={0.5} label="Leverage" /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.5} max={0} label="Funging" />) leverage & funging
               </div>
             </div>
           </div>
@@ -356,9 +350,9 @@ function MCBreakdown({
           <div className="step-content">
             <div className="step-title">Children Reached</div>
             <div className="step-formula">
-              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} label="Grant size" />
               {" ÷ "}
-              <EditableValue value={inputs.costPerChildReached} onChange={(v) => onInputChange("costPerChildReached", v)} format="currencySmall" min={1} max={20} source={{ text: "GiveWell Nov 2025 CEA" }} />
+              <EditableValue value={inputs.costPerChildReached} onChange={(v) => onInputChange("costPerChildReached", v)} format="currencySmall" min={1} max={20} label="Cost per child" source={{ text: "GiveWell Nov 2025 CEA" }} />
               {" = "}
               <ComputedValue value={intermediates.childrenReached} format="number" />
             </div>
@@ -374,11 +368,11 @@ function MCBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.childrenReached} format="number" />
               {" × "}
-              <EditableValue value={inputs.malariaMortalityRate} onChange={(v) => onInputChange("malariaMortalityRate", v)} format="percent" min={0.001} max={0.02} source={{ text: "Malaria mortality rate" }} />
+              <EditableValue value={inputs.malariaMortalityRate} onChange={(v) => onInputChange("malariaMortalityRate", v)} format="percent" min={0.001} max={0.02} label="Mortality rate" source={{ text: "Malaria mortality rate" }} />
               {" × "}
-              <EditableValue value={inputs.proportionMortalityDuringSeason} onChange={(v) => onInputChange("proportionMortalityDuringSeason", v)} format="percent" min={0.3} max={1} source={{ text: "Proportion during SMC season" }} />
+              <EditableValue value={inputs.proportionMortalityDuringSeason} onChange={(v) => onInputChange("proportionMortalityDuringSeason", v)} format="percent" min={0.3} max={1} label="In season" source={{ text: "Proportion during SMC season" }} />
               {" × "}
-              <EditableValue value={inputs.smcEffect} onChange={(v) => onInputChange("smcEffect", v)} format="percent" min={0.3} max={1} source={{ text: "Meremikwu 2012 Cochrane", url: "https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD006657.pub2/full" }} />
+              <EditableValue value={inputs.smcEffect} onChange={(v) => onInputChange("smcEffect", v)} format="percent" min={0.3} max={1} label="SMC effect" source={{ text: "Meremikwu 2012 Cochrane", url: "https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD006657.pub2/full" }} />
               {" = "}
               <ComputedValue value={intermediates.deathsAverted} format="decimal" />
             </div>
@@ -394,7 +388,7 @@ function MCBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.deathsAverted} format="decimal" />
               {" × "}
-              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} />
+              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} label="Moral weight" />
               {" ÷ benchmark = "}
               <ComputedValue value={intermediates.initialCE} format="decimal" />
               {"×"}
@@ -409,10 +403,10 @@ function MCBreakdown({
           <div className="step-content">
             <div className="step-title">Adjustments</div>
             <div className="step-formula adjustments-list">
-              <div>× (1 + <EditableValue value={inputs.adjustmentOlderMortalities} onChange={(v) => onInputChange("adjustmentOlderMortalities", v)} format="percent" min={0} max={0.5} />) older mortalities</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={0.8} />) developmental</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={0} max={0.5} />) program</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.1} max={0.1} /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.5} max={0} />) leverage & funging</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentOlderMortalities} onChange={(v) => onInputChange("adjustmentOlderMortalities", v)} format="percent" min={0} max={0.5} label="5+ deaths" />) older mortalities</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={0.8} label="Dev. benefits" />) developmental</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={0} max={0.5} label="Program" />) program</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.1} max={0.1} label="Leverage" /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.5} max={0} label="Funging" />) leverage & funging</div>
             </div>
           </div>
         </div>
@@ -462,9 +456,9 @@ function HKBreakdown({
           <div className="step-content">
             <div className="step-title">Children Reached</div>
             <div className="step-formula">
-              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} label="Grant size" />
               {" ÷ "}
-              <EditableValue value={inputs.costPerPersonUnder5} onChange={(v) => onInputChange("costPerPersonUnder5", v)} format="currencySmall" min={0.5} max={10} source={{ text: "GiveWell Nov 2025 CEA" }} />
+              <EditableValue value={inputs.costPerPersonUnder5} onChange={(v) => onInputChange("costPerPersonUnder5", v)} format="currencySmall" min={0.5} max={10} label="Cost per child" source={{ text: "GiveWell Nov 2025 CEA" }} />
               {" = "}
               <ComputedValue value={intermediates.peopleReached} format="number" />
             </div>
@@ -480,7 +474,7 @@ function HKBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.peopleReached} format="number" />
               {" × (1 − "}
-              <EditableValue value={inputs.proportionReachedCounterfactual} onChange={(v) => onInputChange("proportionReachedCounterfactual", v)} format="percent" min={0} max={0.8} source={{ text: "Would have received VAS anyway" }} />
+              <EditableValue value={inputs.proportionReachedCounterfactual} onChange={(v) => onInputChange("proportionReachedCounterfactual", v)} format="percent" min={0} max={0.8} label="Counterfactual" source={{ text: "Would have received VAS anyway" }} />
               {") = "}
               <ComputedValue value={intermediates.incrementalReached} format="number" />
             </div>
@@ -496,9 +490,9 @@ function HKBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.incrementalReached} format="number" />
               {" × "}
-              <EditableValue value={inputs.mortalityRateUnder5} onChange={(v) => onInputChange("mortalityRateUnder5", v)} format="percent" min={0.001} max={0.02} source={{ text: "Under-5 mortality rate" }} />
+              <EditableValue value={inputs.mortalityRateUnder5} onChange={(v) => onInputChange("mortalityRateUnder5", v)} format="percent" min={0.001} max={0.02} label="Mortality rate" source={{ text: "Under-5 mortality rate" }} />
               {" × "}
-              <EditableValue value={inputs.vasEffect} onChange={(v) => onInputChange("vasEffect", v)} format="percent" min={0.02} max={0.2} source={{ text: "Imdad 2017 BMJ", url: "https://www.bmj.com/content/357/bmj.j2340" }} />
+              <EditableValue value={inputs.vasEffect} onChange={(v) => onInputChange("vasEffect", v)} format="percent" min={0.02} max={0.2} label="VAS effect" source={{ text: "Imdad 2017 BMJ", url: "https://www.bmj.com/content/357/bmj.j2340" }} />
               {" = "}
               <ComputedValue value={intermediates.deathsAverted} format="decimal" />
             </div>
@@ -514,7 +508,7 @@ function HKBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.deathsAverted} format="decimal" />
               {" × "}
-              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} />
+              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} label="Moral weight" />
               {" ÷ benchmark = "}
               <ComputedValue value={intermediates.initialCE} format="decimal" />
               {"×"}
@@ -529,10 +523,10 @@ function HKBreakdown({
           <div className="step-content">
             <div className="step-title">Adjustments</div>
             <div className="step-formula adjustments-list">
-              <div>× (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={0.5} />) developmental</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={0} max={1} />) program</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentGrantee} onChange={(v) => onInputChange("adjustmentGrantee", v)} format="percent" min={-0.3} max={0.1} />) grantee</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.2} max={0.1} /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.6} max={0} />) leverage & funging</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={0.5} label="Dev. benefits" />) developmental</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={0} max={1} label="Program" />) program</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentGrantee} onChange={(v) => onInputChange("adjustmentGrantee", v)} format="percent" min={-0.3} max={0.1} label="Grantee" />) grantee</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.2} max={0.1} label="Leverage" /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.6} max={0} label="Funging" />) leverage & funging</div>
             </div>
           </div>
         </div>
@@ -582,9 +576,9 @@ function NIBreakdown({
           <div className="step-content">
             <div className="step-title">Children Reached</div>
             <div className="step-formula">
-              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} label="Grant size" />
               {" ÷ "}
-              <EditableValue value={inputs.costPerChildReached} onChange={(v) => onInputChange("costPerChildReached", v)} format="currencySmall" min={5} max={50} source={{ text: "GiveWell Nov 2025 CEA" }} />
+              <EditableValue value={inputs.costPerChildReached} onChange={(v) => onInputChange("costPerChildReached", v)} format="currencySmall" min={5} max={50} label="Cost per child" source={{ text: "GiveWell Nov 2025 CEA" }} />
               {" = "}
               <ComputedValue value={intermediates.childrenReached} format="number" />
             </div>
@@ -600,7 +594,7 @@ function NIBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.childrenReached} format="number" />
               {" × (1 − "}
-              <EditableValue value={inputs.proportionReachedCounterfactual} onChange={(v) => onInputChange("proportionReachedCounterfactual", v)} format="percent" min={0.5} max={0.95} source={{ text: "Would have been vaccinated anyway" }} />
+              <EditableValue value={inputs.proportionReachedCounterfactual} onChange={(v) => onInputChange("proportionReachedCounterfactual", v)} format="percent" min={0.5} max={0.95} label="Counterfactual" source={{ text: "Would have been vaccinated anyway" }} />
               {") = "}
               <ComputedValue value={intermediates.incrementalVaccinated} format="number" />
             </div>
@@ -616,9 +610,9 @@ function NIBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.incrementalVaccinated} format="number" />
               {" × "}
-              <EditableValue value={inputs.probabilityDeathUnvaccinated} onChange={(v) => onInputChange("probabilityDeathUnvaccinated", v)} format="percent" min={0.01} max={0.1} source={{ text: "Death probability if unvaccinated" }} />
+              <EditableValue value={inputs.probabilityDeathUnvaccinated} onChange={(v) => onInputChange("probabilityDeathUnvaccinated", v)} format="percent" min={0.01} max={0.1} label="Death prob." source={{ text: "Death probability if unvaccinated" }} />
               {" × "}
-              <EditableValue value={inputs.vaccineEffect} onChange={(v) => onInputChange("vaccineEffect", v)} format="percent" min={0.3} max={0.8} source={{ text: "Vaccine efficacy (WHO)" }} />
+              <EditableValue value={inputs.vaccineEffect} onChange={(v) => onInputChange("vaccineEffect", v)} format="percent" min={0.3} max={0.8} label="Vaccine effect" source={{ text: "Vaccine efficacy (WHO)" }} />
               {" = "}
               <ComputedValue value={intermediates.deathsAverted} format="decimal" />
             </div>
@@ -632,11 +626,11 @@ function NIBreakdown({
           <div className="step-content">
             <div className="step-title">Adjustments</div>
             <div className="step-formula adjustments-list">
-              <div>× (1 + <EditableValue value={inputs.adjustmentOlderMortalities} onChange={(v) => onInputChange("adjustmentOlderMortalities", v)} format="percent" min={0} max={0.4} />) older mortalities</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={0.5} />) developmental</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentConsumption} onChange={(v) => onInputChange("adjustmentConsumption", v)} format="percent" min={0} max={0.2} />) consumption</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={0} max={1} />) program</div>
-              <div>× (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.2} max={0.1} /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.2} max={0} />) leverage & funging</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentOlderMortalities} onChange={(v) => onInputChange("adjustmentOlderMortalities", v)} format="percent" min={0} max={0.4} label="5+ deaths" />) older mortalities</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={0.5} label="Dev. benefits" />) developmental</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentConsumption} onChange={(v) => onInputChange("adjustmentConsumption", v)} format="percent" min={0} max={0.2} label="Consumption" />) consumption</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={0} max={1} label="Program" />) program</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.2} max={0.1} label="Leverage" /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.2} max={0} label="Funging" />) leverage & funging</div>
             </div>
           </div>
         </div>
@@ -691,11 +685,11 @@ function GDBreakdown({
           <div className="step-content">
             <div className="step-title">Households Reached</div>
             <div className="step-formula">
-              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} label="Grant size" />
               {" ÷ ("}
-              <EditableValue value={inputs.transferAmount} onChange={(v) => onInputChange("transferAmount", v)} format="currency" min={500} max={2000} step={50} source={{ text: "Transfer per household" }} />
+              <EditableValue value={inputs.transferAmount} onChange={(v) => onInputChange("transferAmount", v)} format="currency" min={500} max={2000} step={50} label="Transfer amt" source={{ text: "Transfer per household" }} />
               {" × (1 + "}
-              <EditableValue value={inputs.overheadRate} onChange={(v) => onInputChange("overheadRate", v)} format="percent" min={0.1} max={0.4} source={{ text: "GiveDirectly overhead" }} />
+              <EditableValue value={inputs.overheadRate} onChange={(v) => onInputChange("overheadRate", v)} format="percent" min={0.1} max={0.4} label="Overhead" source={{ text: "GiveDirectly overhead" }} />
               {")) = "}
               <ComputedValue value={intermediates.households} format="number" />
             </div>
@@ -710,9 +704,9 @@ function GDBreakdown({
             <div className="step-title">Consumption Value (log utility)</div>
             <div className="step-formula">
               ln((
-              <EditableValue value={inputs.baselineConsumption} onChange={(v) => onInputChange("baselineConsumption", v)} format="currency" min={300} max={1000} step={10} source={{ text: "Baseline consumption (PPP)", url: "https://blog.givewell.org/2024/11/12/re-evaluating-the-impact-of-unconditional-cash-transfers/" }} />
+              <EditableValue value={inputs.baselineConsumption} onChange={(v) => onInputChange("baselineConsumption", v)} format="currency" min={300} max={1000} step={10} label="Baseline $" source={{ text: "Baseline consumption (PPP)", url: "https://blog.givewell.org/2024/11/12/re-evaluating-the-impact-of-unconditional-cash-transfers/" }} />
               {" + transfer ÷ "}
-              <EditableValue value={inputs.consumptionPersistenceYears} onChange={(v) => onInputChange("consumptionPersistenceYears", v)} format="number" min={1} max={20} />
+              <EditableValue value={inputs.consumptionPersistenceYears} onChange={(v) => onInputChange("consumptionPersistenceYears", v)} format="number" min={1} max={20} label="Persist. yrs" />
               {" yrs) / baseline) × HH × yrs = "}
               <ComputedValue value={intermediates.consumptionValue} format="number" />
               {" UoV"}
@@ -729,9 +723,9 @@ function GDBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.consumptionValue} format="number" />
               {" × ("}
-              <EditableValue value={inputs.spilloverMultiplier} onChange={(v) => onInputChange("spilloverMultiplier", v)} format="decimal" min={1} max={4} step={0.1} source={{ text: "Egger 2022 GE effects", url: "https://www.nber.org/papers/w26600" }} />
+              <EditableValue value={inputs.spilloverMultiplier} onChange={(v) => onInputChange("spilloverMultiplier", v)} format="decimal" min={1} max={4} step={0.1} label="Spillover mult" source={{ text: "Egger 2022 GE effects", url: "https://www.nber.org/papers/w26600" }} />
               {" − 1) × (1 − "}
-              <EditableValue value={inputs.spilloverDiscount} onChange={(v) => onInputChange("spilloverDiscount", v)} format="percent" min={0} max={0.8} source={{ text: "GiveWell uncertainty discount" }} />
+              <EditableValue value={inputs.spilloverDiscount} onChange={(v) => onInputChange("spilloverDiscount", v)} format="percent" min={0} max={0.8} label="Discount" source={{ text: "GiveWell uncertainty discount" }} />
               {") = "}
               <ComputedValue value={intermediates.spilloverValue} format="number" />
               {" UoV"}
@@ -748,15 +742,15 @@ function GDBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.people} format="number" />
               {" people × "}
-              <EditableValue value={inputs.proportionUnder5} onChange={(v) => onInputChange("proportionUnder5", v)} format="percent" min={0.05} max={0.3} />
+              <EditableValue value={inputs.proportionUnder5} onChange={(v) => onInputChange("proportionUnder5", v)} format="percent" min={0.05} max={0.3} label="% under 5" />
               {" u5 × "}
-              <EditableValue value={inputs.under5MortalityRate} onChange={(v) => onInputChange("under5MortalityRate", v)} format="percent" min={0.01} max={0.1} />
+              <EditableValue value={inputs.under5MortalityRate} onChange={(v) => onInputChange("under5MortalityRate", v)} format="percent" min={0.01} max={0.1} label="U5 mort. rate" />
               {" × "}
-              <EditableValue value={inputs.mortalityEffect} onChange={(v) => onInputChange("mortalityEffect", v)} format="percent" min={0} max={0.5} source={{ text: "Banerjee 2023 (46% finding × 50% discount)", url: "https://www.pnas.org/doi/10.1073/pnas.2215588120" }} />
+              <EditableValue value={inputs.mortalityEffect} onChange={(v) => onInputChange("mortalityEffect", v)} format="percent" min={0} max={0.5} label="Cash effect" source={{ text: "Banerjee 2023 (46% finding × 50% discount)", url: "https://www.pnas.org/doi/10.1073/pnas.2215588120" }} />
               {" × (1 − "}
-              <EditableValue value={inputs.mortalityDiscount} onChange={(v) => onInputChange("mortalityDiscount", v)} format="percent" min={0} max={0.8} />
+              <EditableValue value={inputs.mortalityDiscount} onChange={(v) => onInputChange("mortalityDiscount", v)} format="percent" min={0} max={0.8} label="Discount" />
               {") × "}
-              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} />
+              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} label="Moral weight" />
               {" = "}
               <ComputedValue value={intermediates.mortalityValue} format="number" />
               {" UoV"}
@@ -822,9 +816,9 @@ function DWBreakdown({
           <div className="step-content">
             <div className="step-title">Children Treated</div>
             <div className="step-formula">
-              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} label="Grant size" />
               {" ÷ "}
-              <EditableValue value={inputs.costPerChildTreated} onChange={(v) => onInputChange("costPerChildTreated", v)} format="currencySmall" min={0.2} max={2} step={0.05} source={{ text: "Cost per treatment round" }} />
+              <EditableValue value={inputs.costPerChildTreated} onChange={(v) => onInputChange("costPerChildTreated", v)} format="currencySmall" min={0.2} max={2} step={0.05} label="Cost per child" source={{ text: "Cost per treatment round" }} />
               {" = "}
               <ComputedValue value={intermediates.childrenTreated} format="number" />
             </div>
@@ -840,7 +834,7 @@ function DWBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.childrenTreated} format="number" />
               {" × "}
-              <EditableValue value={inputs.infectionPrevalence} onChange={(v) => onInputChange("infectionPrevalence", v)} format="percent" min={0.1} max={0.8} source={{ text: "Worm infection prevalence" }} />
+              <EditableValue value={inputs.infectionPrevalence} onChange={(v) => onInputChange("infectionPrevalence", v)} format="percent" min={0.1} max={0.8} label="Prevalence" source={{ text: "Worm infection prevalence" }} />
               {" = "}
               <ComputedValue value={intermediates.childrenBenefiting} format="number" />
             </div>
@@ -854,15 +848,15 @@ function DWBreakdown({
           <div className="step-content">
             <div className="step-title">Annual Income Gain (adjusted)</div>
             <div className="step-formula">
-              <EditableValue value={inputs.baselineIncome} onChange={(v) => onInputChange("baselineIncome", v)} format="currency" min={400} max={1500} step={50} source={{ text: "Baseline income (PPP)" }} />
+              <EditableValue value={inputs.baselineIncome} onChange={(v) => onInputChange("baselineIncome", v)} format="currency" min={400} max={1500} step={50} label="Baseline $" source={{ text: "Baseline income (PPP)" }} />
               {" × "}
-              <EditableValue value={inputs.incomeEffect} onChange={(v) => onInputChange("incomeEffect", v)} format="percent" min={0.05} max={0.25} source={{ text: "Miguel & Kremer long-term effect", url: "https://www.pnas.org/doi/10.1073/pnas.2023185118" }} />
+              <EditableValue value={inputs.incomeEffect} onChange={(v) => onInputChange("incomeEffect", v)} format="percent" min={0.05} max={0.25} label="Income effect" source={{ text: "Miguel & Kremer long-term effect", url: "https://www.pnas.org/doi/10.1073/pnas.2023185118" }} />
               {" × "}
-              <EditableValue value={inputs.wormBurdenAdjustment} onChange={(v) => onInputChange("wormBurdenAdjustment", v)} format="percent" min={0.1} max={1} source={{ text: "Worm burden vs study population" }} />
+              <EditableValue value={inputs.wormBurdenAdjustment} onChange={(v) => onInputChange("wormBurdenAdjustment", v)} format="percent" min={0.1} max={1} label="Worm burden" source={{ text: "Worm burden vs study population" }} />
               {" × "}
-              <EditableValue value={inputs.programAdjustment} onChange={(v) => onInputChange("programAdjustment", v)} format="percent" min={0.3} max={1} />
+              <EditableValue value={inputs.programAdjustment} onChange={(v) => onInputChange("programAdjustment", v)} format="percent" min={0.3} max={1} label="Program adj" />
               {" × "}
-              <EditableValue value={inputs.evidenceAdjustment} onChange={(v) => onInputChange("evidenceAdjustment", v)} format="percent" min={0.2} max={1} source={{ text: "GiveWell replicability discount" }} />
+              <EditableValue value={inputs.evidenceAdjustment} onChange={(v) => onInputChange("evidenceAdjustment", v)} format="percent" min={0.2} max={1} label="Evidence adj" source={{ text: "GiveWell replicability discount" }} />
               {" = "}
               <ComputedValue value={intermediates.annualGain} format="currency" />
               {"/yr"}
@@ -878,11 +872,11 @@ function DWBreakdown({
             <div className="step-title">Present Value per Child</div>
             <div className="step-formula">
               Sum over{" "}
-              <EditableValue value={inputs.benefitDurationYears} onChange={(v) => onInputChange("benefitDurationYears", v)} format="number" min={10} max={50} step={5} />
+              <EditableValue value={inputs.benefitDurationYears} onChange={(v) => onInputChange("benefitDurationYears", v)} format="number" min={10} max={50} step={5} label="Years" />
               {" years, discounted at "}
-              <EditableValue value={inputs.discountRate} onChange={(v) => onInputChange("discountRate", v)} format="percent" min={0.01} max={0.1} />
+              <EditableValue value={inputs.discountRate} onChange={(v) => onInputChange("discountRate", v)} format="percent" min={0.01} max={0.1} label="Discount rate" />
               {", decay "}
-              <EditableValue value={inputs.benefitDecayRate} onChange={(v) => onInputChange("benefitDecayRate", v)} format="percent" min={0} max={0.2} source={{ text: "Benefit decay (HLI critique: 12%)" }} />
+              <EditableValue value={inputs.benefitDecayRate} onChange={(v) => onInputChange("benefitDecayRate", v)} format="percent" min={0} max={0.2} label="Decay rate" source={{ text: "Benefit decay (HLI critique: 12%)" }} />
               {" = "}
               <ComputedValue value={intermediates.pvPerChild} format="currency" />
             </div>

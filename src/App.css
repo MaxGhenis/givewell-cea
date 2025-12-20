@@ -902,15 +902,17 @@ body {
 /* Editable values - inline number inputs */
 .editable-value-wrapper {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   position: relative;
+  margin: 0 2px;
 }
 
 .editable-display {
   background: linear-gradient(135deg, var(--color-bg-warm) 0%, var(--color-bg) 100%);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   font-family: var(--font-display);
   font-weight: 500;
   color: var(--color-primary);
@@ -932,9 +934,10 @@ body {
   border: 2px solid var(--color-primary);
   border-radius: 4px;
   padding: 2px 6px;
-  width: 80px;
+  width: 90px;
   outline: none;
   box-shadow: 0 0 0 2px rgba(13, 92, 99, 0.15);
+  text-align: center;
 }
 
 .editable-value-input::-webkit-inner-spin-button,
@@ -942,24 +945,27 @@ body {
   opacity: 1;
 }
 
-/* Parameter label - visible description next to editable value */
-.param-label {
-  margin-left: 4px;
-  font-size: 0.75rem;
+/* Value label - shown below editable value */
+.value-label {
+  font-size: 0.65rem;
   color: var(--color-text-muted);
-  cursor: help;
-  font-style: italic;
+  text-align: center;
+  margin-top: 2px;
+  line-height: 1.2;
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.param-label a {
+.value-label a {
   color: var(--color-text-muted);
   text-decoration: none;
-  border-bottom: 1px dotted var(--color-text-muted);
 }
 
-.param-label a:hover {
+.value-label a:hover {
   color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
+  text-decoration: underline;
 }
 
 /* Computed values (read-only) */
