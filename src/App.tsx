@@ -743,7 +743,7 @@ function CharityCard({
             <span className="metric-value-sm">
               {formatCurrency(results.costPerDeathAverted)}
             </span>
-            <span className="metric-label-sm">per death averted</span>
+            <span className="metric-label-sm">cost per death averted</span>
           </div>
           <div className="metric">
             <span className="metric-value-sm">
