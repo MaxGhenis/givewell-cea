@@ -2,7 +2,7 @@
  * Calculation Breakdown Components
  *
  * Visualizes the step-by-step calculations for each charity's
- * cost-effectiveness analysis with intermediate values and source citations.
+ * cost-effectiveness analysis with inline editable values.
  */
 
 import { useMemo } from "react";
@@ -14,61 +14,121 @@ import type { GiveDirectlyInputs } from "../lib/models/givedirectly";
 import type { DewormingInputs } from "../lib/models/deworming";
 import type { CharityInputs, UnifiedResults } from "../lib/models";
 
-interface CalculationStepProps {
-  label: string;
-  formula?: string;
-  value: string | number;
-  unit?: string;
-  highlight?: boolean;
-  indent?: number;
+// Editable value component - click to edit inline
+interface EditableValueProps {
+  value: number;
+  onChange: (value: number) => void;
+  format: "currency" | "percent" | "decimal" | "number" | "currencySmall";
+  min?: number;
+  max?: number;
+  step?: number;
+  source?: { text: string; url?: string };
 }
 
-function CalculationStep({ label, formula, value, unit, highlight, indent = 0 }: CalculationStepProps) {
-  const displayValue = typeof value === "number"
-    ? (value >= 1000000 ? `${(value / 1000000).toFixed(2)}M`
-      : value >= 1000 ? `${(value / 1000).toFixed(2)}K`
-      : value >= 1 ? value.toFixed(2)
-      : value >= 0.0001 ? value.toFixed(4)
-      : value.toExponential(2))
-    : value;
+function EditableValue({ value, onChange, format, min, max, step = 0.01, source }: EditableValueProps) {
+  const displayValue = () => {
+    switch (format) {
+      case "currency":
+        return value >= 1000000 ? `$${(value / 1000000).toFixed(1)}M` : `$${value.toLocaleString()}`;
+      case "currencySmall":
+        return `$${value.toFixed(2)}`;
+      case "percent":
+        return `${(value * 100).toFixed(2)}%`;
+      case "decimal":
+        return value.toFixed(3);
+      case "number":
+        return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let newValue = parseFloat(e.target.value);
+    if (isNaN(newValue)) return;
+    if (min !== undefined) newValue = Math.max(min, newValue);
+    if (max !== undefined) newValue = Math.min(max, newValue);
+    onChange(newValue);
+  };
+
+  const inputValue = format === "percent" ? value * 100 : value;
+  const inputStep = format === "percent" ? (step || 0.01) * 100 : step;
 
   return (
-    <div
-      className={`calc-step ${highlight ? "calc-step-highlight" : ""}`}
-      style={{ marginLeft: `${indent * 16}px` }}
-    >
-      <div className="calc-step-label">{label}</div>
-      {formula && <div className="calc-step-formula">{formula}</div>}
-      <div className="calc-step-value">
-        {displayValue}{unit && <span className="calc-step-unit">{unit}</span>}
-      </div>
-    </div>
+    <span className="editable-value-wrapper">
+      <input
+        type="number"
+        className="editable-value"
+        value={inputValue}
+        onChange={handleChange}
+        step={inputStep}
+        min={format === "percent" && min !== undefined ? min * 100 : min}
+        max={format === "percent" && max !== undefined ? max * 100 : max}
+      />
+      <span className="editable-display">{displayValue()}</span>
+      {source && (
+        <span className="source-tooltip">
+          {source.url ? (
+            <a href={source.url} target="_blank" rel="noopener noreferrer" title={source.text}>ⓘ</a>
+          ) : (
+            <span title={source.text}>ⓘ</span>
+          )}
+        </span>
+      )}
+    </span>
   );
 }
 
-interface SourceCitationProps {
-  parameter: string;
-  source: string;
+// Read-only computed value
+function ComputedValue({ value, format }: { value: number; format: "currency" | "number" | "decimal" }) {
+  const display = () => {
+    switch (format) {
+      case "currency":
+        return value >= 1000000 ? `$${(value / 1000000).toFixed(2)}M`
+          : value >= 1000 ? `$${(value / 1000).toFixed(1)}K`
+          : `$${value.toFixed(0)}`;
+      case "number":
+        return value >= 1000000 ? `${(value / 1000000).toFixed(2)}M`
+          : value >= 1000 ? `${(value / 1000).toFixed(1)}K`
+          : value.toFixed(1);
+      case "decimal":
+        return value.toFixed(2);
+    }
+  };
+  return <span className="computed-value">{display()}</span>;
+}
+
+// Result value (highlighted)
+function ResultValue({ value, unit }: { value: number; unit: string }) {
+  const display = value >= 100 ? value.toFixed(1) : value >= 1 ? value.toFixed(2) : value.toFixed(3);
+  return <span className="result-value">{display}{unit}</span>;
+}
+
+interface SourceLinkProps {
+  text: string;
   url?: string;
 }
 
-function SourceCitation({ parameter, source, url }: SourceCitationProps) {
+function SourceLink({ text, url }: SourceLinkProps) {
   return (
-    <div className="source-citation">
-      <span className="source-param">{parameter}:</span>
+    <div className="source-link-row">
       {url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" className="source-link">
-          {source}
-        </a>
+        <a href={url} target="_blank" rel="noopener noreferrer">{text}</a>
       ) : (
-        <span className="source-text">{source}</span>
+        <span>{text}</span>
       )}
     </div>
   );
 }
 
 // AMF Calculation Breakdown
-function AMFBreakdown({ inputs, results }: { inputs: AMFInputs; results: UnifiedResults }) {
+function AMFBreakdown({
+  inputs,
+  results,
+  onInputChange
+}: {
+  inputs: AMFInputs;
+  results: UnifiedResults;
+  onInputChange: (key: keyof AMFInputs, value: number) => void;
+}) {
   const intermediates = useMemo(() => {
     const peopleReached = inputs.grantSize / inputs.costPerUnder5Reached;
     const deathsAverted = peopleReached * inputs.yearsEffectiveCoverage *
@@ -83,103 +143,160 @@ function AMFBreakdown({ inputs, results }: { inputs: AMFInputs; results: Unified
 
   return (
     <div className="calculation-breakdown">
-      <h4>Calculation Breakdown</h4>
+      <div className="calc-flow">
+        <div className="calc-step-card">
+          <div className="step-number">1</div>
+          <div className="step-content">
+            <div className="step-title">Children Reached</div>
+            <div className="step-formula">
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              {" ÷ "}
+              <EditableValue
+                value={inputs.costPerUnder5Reached}
+                onChange={(v) => onInputChange("costPerUnder5Reached", v)}
+                format="currencySmall"
+                min={1}
+                max={50}
+                source={{ text: "GiveWell Nov 2025 CEA", url: "https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" }}
+              />
+              {" = "}
+              <ComputedValue value={intermediates.peopleReached} format="number" />
+            </div>
+          </div>
+        </div>
 
-      <div className="calc-section">
-        <h5>1. People Reached</h5>
-        <CalculationStep
-          label="Grant size ÷ Cost per child"
-          formula={`$${(inputs.grantSize/1000000).toFixed(1)}M ÷ $${inputs.costPerUnder5Reached.toFixed(2)}`}
-          value={intermediates.peopleReached}
-          unit=" children"
-        />
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">2</div>
+          <div className="step-content">
+            <div className="step-title">Deaths Averted (Under 5)</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.peopleReached} format="number" />
+              {" × "}
+              <EditableValue
+                value={inputs.yearsEffectiveCoverage}
+                onChange={(v) => onInputChange("yearsEffectiveCoverage", v)}
+                format="decimal"
+                min={0.5}
+                max={5}
+                source={{ text: "Years of effective ITN coverage" }}
+              />
+              {" × "}
+              <EditableValue
+                value={inputs.malariaMortalityRate}
+                onChange={(v) => onInputChange("malariaMortalityRate", v)}
+                format="percent"
+                min={0.0001}
+                max={0.01}
+                source={{ text: "Malaria-attributable mortality rate (WHO)" }}
+              />
+              {" × "}
+              <EditableValue
+                value={inputs.itnEffectOnDeaths}
+                onChange={(v) => onInputChange("itnEffectOnDeaths", v)}
+                format="percent"
+                min={0.05}
+                max={0.8}
+                source={{ text: "Lengeler 2004 Cochrane Review", url: "https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD000363.pub2/full" }}
+              />
+              {" = "}
+              <ComputedValue value={intermediates.deathsAverted} format="decimal" />
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">3</div>
+          <div className="step-content">
+            <div className="step-title">Value Generated</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.deathsAverted} format="decimal" />
+              {" × "}
+              <EditableValue
+                value={inputs.moralWeightUnder5}
+                onChange={(v) => onInputChange("moralWeightUnder5", v)}
+                format="number"
+                min={50}
+                max={200}
+                source={{ text: "GiveWell Moral Weights", url: "https://docs.google.com/spreadsheets/d/11HsJLpq0Suf3SK_PmzzWpK1tr_BTd364j0l3xVvSCQw" }}
+              />
+              {" UoV = "}
+              <ComputedValue value={intermediates.valueGenerated} format="number" />
+              {" UoV"}
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">4</div>
+          <div className="step-content">
+            <div className="step-title">Initial Cost-Effectiveness</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.valueGenerated} format="number" />
+              {" ÷ "}
+              <ComputedValue value={intermediates.benchmarkValue} format="number" />
+              {" = "}
+              <ComputedValue value={intermediates.initialCE} format="decimal" />
+              {"× benchmark"}
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">5</div>
+          <div className="step-content">
+            <div className="step-title">Adjustments</div>
+            <div className="step-formula adjustments-list">
+              <div>
+                × (1 + <EditableValue value={inputs.adjustmentOlderMortalities} onChange={(v) => onInputChange("adjustmentOlderMortalities", v)} format="percent" min={0} max={1} source={{ text: "5+ mortality benefits" }} />) older mortalities
+              </div>
+              <div>
+                × (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={1} source={{ text: "Long-term developmental benefits" }} />) developmental
+              </div>
+              <div>
+                × (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={-0.5} max={1} />) program benefits
+              </div>
+              <div>
+                × (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.5} max={0.5} /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.5} max={0} />) leverage & funging
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card result-card">
+          <div className="step-content">
+            <div className="step-title">Final Cost-Effectiveness</div>
+            <ResultValue value={results.finalXBenchmark} unit="× benchmark" />
+          </div>
+        </div>
       </div>
 
-      <div className="calc-section">
-        <h5>2. Deaths Averted (Under 5)</h5>
-        <CalculationStep
-          label="Children × Years × Mortality Rate × ITN Effect"
-          formula={`${(intermediates.peopleReached/1000).toFixed(1)}K × ${inputs.yearsEffectiveCoverage.toFixed(2)} × ${(inputs.malariaMortalityRate*100).toFixed(3)}% × ${(inputs.itnEffectOnDeaths*100).toFixed(1)}%`}
-          value={intermediates.deathsAverted}
-          unit=" deaths averted"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>3. Value Generated</h5>
-        <CalculationStep
-          label="Deaths averted × Moral weight"
-          formula={`${intermediates.deathsAverted.toFixed(1)} × ${inputs.moralWeightUnder5.toFixed(1)} UoV`}
-          value={intermediates.valueGenerated}
-          unit=" UoV"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>4. Initial Cost-Effectiveness</h5>
-        <CalculationStep
-          label="Value ÷ Benchmark value"
-          formula={`${intermediates.valueGenerated.toFixed(0)} ÷ ${intermediates.benchmarkValue.toFixed(0)}`}
-          value={intermediates.initialCE}
-          unit="× benchmark"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>5. Adjustments Applied</h5>
-        <CalculationStep
-          label="+ Older mortalities"
-          formula={`× (1 + ${(inputs.adjustmentOlderMortalities*100).toFixed(1)}%)`}
-          value={intermediates.ceWithOlder}
-          unit="×"
-          indent={1}
-        />
-        <CalculationStep
-          label="+ Developmental benefits"
-          formula={`× (1 + ${(inputs.adjustmentDevelopmental*100).toFixed(1)}%)`}
-          value={intermediates.ceWithDev}
-          unit="×"
-          indent={1}
-        />
-        <CalculationStep
-          label="+ Program benefits, grantee, leverage, funging"
-          formula={`× (1 + ${(inputs.adjustmentProgramBenefits*100).toFixed(0)}%) × (1 ${inputs.adjustmentGrantee >= 0 ? '+' : ''}${(inputs.adjustmentGrantee*100).toFixed(0)}%) × ...`}
-          value={results.finalXBenchmark}
-          unit="× benchmark"
-          highlight
-          indent={1}
-        />
-      </div>
-
-      <div className="sources-section">
-        <h5>Parameter Sources</h5>
-        <SourceCitation
-          parameter="Cost per child"
-          source="GiveWell Nov 2025 CEA, 'AMF' sheet, Row 8"
-          url="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc"
-        />
-        <SourceCitation
-          parameter="Malaria mortality rate"
-          source="GiveWell Nov 2025 CEA, derived from WHO data"
-          url="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc"
-        />
-        <SourceCitation
-          parameter="ITN effect on deaths"
-          source="Cochrane Review meta-analysis (Lengeler 2004)"
-          url="https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD000363.pub2/full"
-        />
-        <SourceCitation
-          parameter="Moral weights"
-          source="GiveWell Moral Weights Tool"
-          url="https://docs.google.com/spreadsheets/d/11HsJLpq0Suf3SK_PmzzWpK1tr_BTd364j0l3xVvSCQw"
-        />
+      <div className="sources-footer">
+        <SourceLink text="GiveWell November 2025 CEA Spreadsheet" url="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" />
       </div>
     </div>
   );
 }
 
 // Malaria Consortium Breakdown
-function MCBreakdown({ inputs, results }: { inputs: MalariaConsortiumInputs; results: UnifiedResults }) {
+function MCBreakdown({
+  inputs,
+  results,
+  onInputChange
+}: {
+  inputs: MalariaConsortiumInputs;
+  results: UnifiedResults;
+  onInputChange: (key: keyof MalariaConsortiumInputs, value: number) => void;
+}) {
   const intermediates = useMemo(() => {
     const childrenReached = inputs.grantSize / inputs.costPerChildReached;
     const deathsAverted = childrenReached * inputs.malariaMortalityRate *
@@ -192,66 +309,100 @@ function MCBreakdown({ inputs, results }: { inputs: MalariaConsortiumInputs; res
 
   return (
     <div className="calculation-breakdown">
-      <h4>Calculation Breakdown</h4>
+      <div className="calc-flow">
+        <div className="calc-step-card">
+          <div className="step-number">1</div>
+          <div className="step-content">
+            <div className="step-title">Children Reached</div>
+            <div className="step-formula">
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              {" ÷ "}
+              <EditableValue value={inputs.costPerChildReached} onChange={(v) => onInputChange("costPerChildReached", v)} format="currencySmall" min={1} max={20} source={{ text: "GiveWell Nov 2025 CEA" }} />
+              {" = "}
+              <ComputedValue value={intermediates.childrenReached} format="number" />
+            </div>
+          </div>
+        </div>
 
-      <div className="calc-section">
-        <h5>1. Children Reached</h5>
-        <CalculationStep
-          label="Grant size ÷ Cost per child"
-          formula={`$${(inputs.grantSize/1000000).toFixed(1)}M ÷ $${inputs.costPerChildReached.toFixed(2)}`}
-          value={intermediates.childrenReached}
-          unit=" children"
-        />
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">2</div>
+          <div className="step-content">
+            <div className="step-title">Deaths Averted</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.childrenReached} format="number" />
+              {" × "}
+              <EditableValue value={inputs.malariaMortalityRate} onChange={(v) => onInputChange("malariaMortalityRate", v)} format="percent" min={0.001} max={0.02} source={{ text: "Malaria mortality rate" }} />
+              {" × "}
+              <EditableValue value={inputs.proportionMortalityDuringSeason} onChange={(v) => onInputChange("proportionMortalityDuringSeason", v)} format="percent" min={0.3} max={1} source={{ text: "Proportion during SMC season" }} />
+              {" × "}
+              <EditableValue value={inputs.smcEffect} onChange={(v) => onInputChange("smcEffect", v)} format="percent" min={0.3} max={1} source={{ text: "Meremikwu 2012 Cochrane", url: "https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD006657.pub2/full" }} />
+              {" = "}
+              <ComputedValue value={intermediates.deathsAverted} format="decimal" />
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">3</div>
+          <div className="step-content">
+            <div className="step-title">Value & Initial CE</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.deathsAverted} format="decimal" />
+              {" × "}
+              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} />
+              {" ÷ benchmark = "}
+              <ComputedValue value={intermediates.initialCE} format="decimal" />
+              {"×"}
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">4</div>
+          <div className="step-content">
+            <div className="step-title">Adjustments</div>
+            <div className="step-formula adjustments-list">
+              <div>× (1 + <EditableValue value={inputs.adjustmentOlderMortalities} onChange={(v) => onInputChange("adjustmentOlderMortalities", v)} format="percent" min={0} max={0.5} />) older mortalities</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={0.8} />) developmental</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={0} max={0.5} />) program</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.1} max={0.1} /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.5} max={0} />) leverage & funging</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card result-card">
+          <div className="step-content">
+            <div className="step-title">Final Cost-Effectiveness</div>
+            <ResultValue value={results.finalXBenchmark} unit="× benchmark" />
+          </div>
+        </div>
       </div>
 
-      <div className="calc-section">
-        <h5>2. Deaths Averted</h5>
-        <CalculationStep
-          label="Children × Mortality × Season proportion × SMC effect"
-          formula={`${(intermediates.childrenReached/1000).toFixed(0)}K × ${(inputs.malariaMortalityRate*100).toFixed(2)}% × ${(inputs.proportionMortalityDuringSeason*100).toFixed(0)}% × ${(inputs.smcEffect*100).toFixed(0)}%`}
-          value={intermediates.deathsAverted}
-          unit=" deaths"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>3. Initial Cost-Effectiveness</h5>
-        <CalculationStep
-          label="(Deaths × Moral weight) ÷ Benchmark"
-          value={intermediates.initialCE}
-          unit="× benchmark"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>4. Final (with adjustments)</h5>
-        <CalculationStep
-          label="After older mortalities, developmental, program adjustments"
-          value={results.finalXBenchmark}
-          unit="× benchmark"
-          highlight
-        />
-      </div>
-
-      <div className="sources-section">
-        <h5>Parameter Sources</h5>
-        <SourceCitation
-          parameter="Cost per child"
-          source="GiveWell Nov 2025 CEA, 'SMC' sheet"
-          url="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc"
-        />
-        <SourceCitation
-          parameter="SMC effect"
-          source="Meremikwu et al. Cochrane Review (2012)"
-          url="https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD006657.pub2/full"
-        />
+      <div className="sources-footer">
+        <SourceLink text="GiveWell November 2025 CEA Spreadsheet" url="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" />
       </div>
     </div>
   );
 }
 
 // Helen Keller Breakdown
-function HKBreakdown({ inputs, results }: { inputs: HelenKellerInputs; results: UnifiedResults }) {
+function HKBreakdown({
+  inputs,
+  results,
+  onInputChange
+}: {
+  inputs: HelenKellerInputs;
+  results: UnifiedResults;
+  onInputChange: (key: keyof HelenKellerInputs, value: number) => void;
+}) {
   const intermediates = useMemo(() => {
     const peopleReached = inputs.grantSize / inputs.costPerPersonUnder5;
     const incrementalReached = peopleReached * (1 - inputs.proportionReachedCounterfactual);
@@ -264,73 +415,114 @@ function HKBreakdown({ inputs, results }: { inputs: HelenKellerInputs; results: 
 
   return (
     <div className="calculation-breakdown">
-      <h4>Calculation Breakdown</h4>
+      <div className="calc-flow">
+        <div className="calc-step-card">
+          <div className="step-number">1</div>
+          <div className="step-content">
+            <div className="step-title">Children Reached</div>
+            <div className="step-formula">
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              {" ÷ "}
+              <EditableValue value={inputs.costPerPersonUnder5} onChange={(v) => onInputChange("costPerPersonUnder5", v)} format="currencySmall" min={0.5} max={10} source={{ text: "GiveWell Nov 2025 CEA" }} />
+              {" = "}
+              <ComputedValue value={intermediates.peopleReached} format="number" />
+            </div>
+          </div>
+        </div>
 
-      <div className="calc-section">
-        <h5>1. People Reached</h5>
-        <CalculationStep
-          label="Grant size ÷ Cost per child"
-          formula={`$${(inputs.grantSize/1000000).toFixed(1)}M ÷ $${inputs.costPerPersonUnder5.toFixed(2)}`}
-          value={intermediates.peopleReached}
-          unit=" children"
-        />
-        <CalculationStep
-          label="Incremental (counterfactual-adjusted)"
-          formula={`${(intermediates.peopleReached/1000000).toFixed(2)}M × (1 - ${(inputs.proportionReachedCounterfactual*100).toFixed(0)}%)`}
-          value={intermediates.incrementalReached}
-          unit=" children"
-          indent={1}
-        />
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">2</div>
+          <div className="step-content">
+            <div className="step-title">Incremental (Counterfactual-Adjusted)</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.peopleReached} format="number" />
+              {" × (1 − "}
+              <EditableValue value={inputs.proportionReachedCounterfactual} onChange={(v) => onInputChange("proportionReachedCounterfactual", v)} format="percent" min={0} max={0.8} source={{ text: "Would have received VAS anyway" }} />
+              {") = "}
+              <ComputedValue value={intermediates.incrementalReached} format="number" />
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">3</div>
+          <div className="step-content">
+            <div className="step-title">Deaths Averted</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.incrementalReached} format="number" />
+              {" × "}
+              <EditableValue value={inputs.mortalityRateUnder5} onChange={(v) => onInputChange("mortalityRateUnder5", v)} format="percent" min={0.001} max={0.02} source={{ text: "Under-5 mortality rate" }} />
+              {" × "}
+              <EditableValue value={inputs.vasEffect} onChange={(v) => onInputChange("vasEffect", v)} format="percent" min={0.02} max={0.2} source={{ text: "Imdad 2017 BMJ", url: "https://www.bmj.com/content/357/bmj.j2340" }} />
+              {" = "}
+              <ComputedValue value={intermediates.deathsAverted} format="decimal" />
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">4</div>
+          <div className="step-content">
+            <div className="step-title">Value & Initial CE</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.deathsAverted} format="decimal" />
+              {" × "}
+              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} />
+              {" ÷ benchmark = "}
+              <ComputedValue value={intermediates.initialCE} format="decimal" />
+              {"×"}
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">5</div>
+          <div className="step-content">
+            <div className="step-title">Adjustments</div>
+            <div className="step-formula adjustments-list">
+              <div>× (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={0.5} />) developmental</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={0} max={1} />) program</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentGrantee} onChange={(v) => onInputChange("adjustmentGrantee", v)} format="percent" min={-0.3} max={0.1} />) grantee</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.2} max={0.1} /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.6} max={0} />) leverage & funging</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card result-card">
+          <div className="step-content">
+            <div className="step-title">Final Cost-Effectiveness</div>
+            <ResultValue value={results.finalXBenchmark} unit="× benchmark" />
+          </div>
+        </div>
       </div>
 
-      <div className="calc-section">
-        <h5>2. Deaths Averted</h5>
-        <CalculationStep
-          label="Incremental × Mortality rate × VAS effect"
-          formula={`${(intermediates.incrementalReached/1000000).toFixed(2)}M × ${(inputs.mortalityRateUnder5*100).toFixed(2)}% × ${(inputs.vasEffect*100).toFixed(1)}%`}
-          value={intermediates.deathsAverted}
-          unit=" deaths"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>3. Initial Cost-Effectiveness</h5>
-        <CalculationStep
-          label="(Deaths × Moral weight) ÷ Benchmark"
-          value={intermediates.initialCE}
-          unit="× benchmark"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>4. Final (with adjustments)</h5>
-        <CalculationStep
-          label="After developmental, program, leverage, funging adjustments"
-          value={results.finalXBenchmark}
-          unit="× benchmark"
-          highlight
-        />
-      </div>
-
-      <div className="sources-section">
-        <h5>Parameter Sources</h5>
-        <SourceCitation
-          parameter="Cost per child"
-          source="GiveWell Nov 2025 CEA, 'VAS' sheet"
-          url="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc"
-        />
-        <SourceCitation
-          parameter="VAS effect on mortality"
-          source="Imdad et al. BMJ (2017) meta-analysis"
-          url="https://www.bmj.com/content/357/bmj.j2340"
-        />
+      <div className="sources-footer">
+        <SourceLink text="GiveWell November 2025 CEA Spreadsheet" url="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" />
       </div>
     </div>
   );
 }
 
 // New Incentives Breakdown
-function NIBreakdown({ inputs, results }: { inputs: NewIncentivesInputs; results: UnifiedResults }) {
+function NIBreakdown({
+  inputs,
+  results,
+  onInputChange
+}: {
+  inputs: NewIncentivesInputs;
+  results: UnifiedResults;
+  onInputChange: (key: keyof NewIncentivesInputs, value: number) => void;
+}) {
   const intermediates = useMemo(() => {
     const childrenReached = inputs.grantSize / inputs.costPerChildReached;
     const incrementalVaccinated = childrenReached * (1 - inputs.proportionReachedCounterfactual);
@@ -343,73 +535,98 @@ function NIBreakdown({ inputs, results }: { inputs: NewIncentivesInputs; results
 
   return (
     <div className="calculation-breakdown">
-      <h4>Calculation Breakdown</h4>
+      <div className="calc-flow">
+        <div className="calc-step-card">
+          <div className="step-number">1</div>
+          <div className="step-content">
+            <div className="step-title">Children Reached</div>
+            <div className="step-formula">
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              {" ÷ "}
+              <EditableValue value={inputs.costPerChildReached} onChange={(v) => onInputChange("costPerChildReached", v)} format="currencySmall" min={5} max={50} source={{ text: "GiveWell Nov 2025 CEA" }} />
+              {" = "}
+              <ComputedValue value={intermediates.childrenReached} format="number" />
+            </div>
+          </div>
+        </div>
 
-      <div className="calc-section">
-        <h5>1. Children Reached</h5>
-        <CalculationStep
-          label="Grant size ÷ Cost per child"
-          formula={`$${(inputs.grantSize/1000000).toFixed(1)}M ÷ $${inputs.costPerChildReached.toFixed(2)}`}
-          value={intermediates.childrenReached}
-          unit=" children"
-        />
-        <CalculationStep
-          label="Incremental vaccinations"
-          formula={`${(intermediates.childrenReached/1000).toFixed(1)}K × (1 - ${(inputs.proportionReachedCounterfactual*100).toFixed(1)}%)`}
-          value={intermediates.incrementalVaccinated}
-          unit=" children"
-          indent={1}
-        />
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">2</div>
+          <div className="step-content">
+            <div className="step-title">Incremental Vaccinations</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.childrenReached} format="number" />
+              {" × (1 − "}
+              <EditableValue value={inputs.proportionReachedCounterfactual} onChange={(v) => onInputChange("proportionReachedCounterfactual", v)} format="percent" min={0.5} max={0.95} source={{ text: "Would have been vaccinated anyway" }} />
+              {") = "}
+              <ComputedValue value={intermediates.incrementalVaccinated} format="number" />
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">3</div>
+          <div className="step-content">
+            <div className="step-title">Deaths Averted</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.incrementalVaccinated} format="number" />
+              {" × "}
+              <EditableValue value={inputs.probabilityDeathUnvaccinated} onChange={(v) => onInputChange("probabilityDeathUnvaccinated", v)} format="percent" min={0.01} max={0.1} source={{ text: "Death probability if unvaccinated" }} />
+              {" × "}
+              <EditableValue value={inputs.vaccineEffect} onChange={(v) => onInputChange("vaccineEffect", v)} format="percent" min={0.3} max={0.8} source={{ text: "Vaccine efficacy (WHO)" }} />
+              {" = "}
+              <ComputedValue value={intermediates.deathsAverted} format="decimal" />
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">4</div>
+          <div className="step-content">
+            <div className="step-title">Adjustments</div>
+            <div className="step-formula adjustments-list">
+              <div>× (1 + <EditableValue value={inputs.adjustmentOlderMortalities} onChange={(v) => onInputChange("adjustmentOlderMortalities", v)} format="percent" min={0} max={0.4} />) older mortalities</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentDevelopmental} onChange={(v) => onInputChange("adjustmentDevelopmental", v)} format="percent" min={0} max={0.5} />) developmental</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentConsumption} onChange={(v) => onInputChange("adjustmentConsumption", v)} format="percent" min={0} max={0.2} />) consumption</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentProgramBenefits} onChange={(v) => onInputChange("adjustmentProgramBenefits", v)} format="percent" min={0} max={1} />) program</div>
+              <div>× (1 + <EditableValue value={inputs.adjustmentLeverage} onChange={(v) => onInputChange("adjustmentLeverage", v)} format="percent" min={-0.2} max={0.1} /> + <EditableValue value={inputs.adjustmentFunging} onChange={(v) => onInputChange("adjustmentFunging", v)} format="percent" min={-0.2} max={0} />) leverage & funging</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card result-card">
+          <div className="step-content">
+            <div className="step-title">Final Cost-Effectiveness</div>
+            <ResultValue value={results.finalXBenchmark} unit="× benchmark" />
+          </div>
+        </div>
       </div>
 
-      <div className="calc-section">
-        <h5>2. Deaths Averted</h5>
-        <CalculationStep
-          label="Incremental × Death prob. × Vaccine effect"
-          formula={`${intermediates.incrementalVaccinated.toFixed(0)} × ${(inputs.probabilityDeathUnvaccinated*100).toFixed(1)}% × ${(inputs.vaccineEffect*100).toFixed(0)}%`}
-          value={intermediates.deathsAverted}
-          unit=" deaths"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>3. Initial Cost-Effectiveness</h5>
-        <CalculationStep
-          label="(Deaths × Moral weight) ÷ Benchmark"
-          value={intermediates.initialCE}
-          unit="× benchmark"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>4. Final (with adjustments)</h5>
-        <CalculationStep
-          label="After older mortalities, developmental, consumption, program adjustments"
-          value={results.finalXBenchmark}
-          unit="× benchmark"
-          highlight
-        />
-      </div>
-
-      <div className="sources-section">
-        <h5>Parameter Sources</h5>
-        <SourceCitation
-          parameter="Cost per child"
-          source="GiveWell Nov 2025 CEA, 'NI' sheet"
-          url="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc"
-        />
-        <SourceCitation
-          parameter="Vaccine effect"
-          source="WHO vaccine efficacy data"
-          url="https://www.who.int/teams/immunization-vaccines-and-biologicals"
-        />
+      <div className="sources-footer">
+        <SourceLink text="GiveWell November 2025 CEA Spreadsheet" url="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" />
       </div>
     </div>
   );
 }
 
 // GiveDirectly Breakdown
-function GDBreakdown({ inputs, results }: { inputs: GiveDirectlyInputs; results: UnifiedResults }) {
+function GDBreakdown({
+  inputs,
+  results,
+  onInputChange
+}: {
+  inputs: GiveDirectlyInputs;
+  results: UnifiedResults;
+  onInputChange: (key: keyof GiveDirectlyInputs, value: number) => void;
+}) {
   const intermediates = useMemo(() => {
     const costPerHH = inputs.transferAmount * (1 + inputs.overheadRate);
     const households = inputs.grantSize / costPerHH;
@@ -427,88 +644,115 @@ function GDBreakdown({ inputs, results }: { inputs: GiveDirectlyInputs; results:
 
   return (
     <div className="calculation-breakdown">
-      <h4>Calculation Breakdown</h4>
+      <div className="calc-flow">
+        <div className="calc-step-card">
+          <div className="step-number">1</div>
+          <div className="step-content">
+            <div className="step-title">Households Reached</div>
+            <div className="step-formula">
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              {" ÷ ("}
+              <EditableValue value={inputs.transferAmount} onChange={(v) => onInputChange("transferAmount", v)} format="currency" min={500} max={2000} step={50} source={{ text: "Transfer per household" }} />
+              {" × (1 + "}
+              <EditableValue value={inputs.overheadRate} onChange={(v) => onInputChange("overheadRate", v)} format="percent" min={0.1} max={0.4} source={{ text: "GiveDirectly overhead" }} />
+              {")) = "}
+              <ComputedValue value={intermediates.households} format="number" />
+            </div>
+          </div>
+        </div>
 
-      <div className="calc-section">
-        <h5>1. Households Reached</h5>
-        <CalculationStep
-          label="Grant ÷ (Transfer × (1 + Overhead))"
-          formula={`$${(inputs.grantSize/1000000).toFixed(1)}M ÷ ($${inputs.transferAmount} × ${(1+inputs.overheadRate).toFixed(2)})`}
-          value={intermediates.households}
-          unit=" households"
-        />
-        <CalculationStep
-          label="People reached"
-          formula={`${intermediates.households.toFixed(0)} × ${inputs.householdSize}`}
-          value={intermediates.people}
-          unit=" people"
-          indent={1}
-        />
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">2</div>
+          <div className="step-content">
+            <div className="step-title">Consumption Value (log utility)</div>
+            <div className="step-formula">
+              ln((
+              <EditableValue value={inputs.baselineConsumption} onChange={(v) => onInputChange("baselineConsumption", v)} format="currency" min={300} max={1000} step={10} source={{ text: "Baseline consumption (PPP)", url: "https://blog.givewell.org/2024/11/12/re-evaluating-the-impact-of-unconditional-cash-transfers/" }} />
+              {" + transfer ÷ "}
+              <EditableValue value={inputs.consumptionPersistenceYears} onChange={(v) => onInputChange("consumptionPersistenceYears", v)} format="number" min={1} max={20} />
+              {" yrs) / baseline) × HH × yrs = "}
+              <ComputedValue value={intermediates.consumptionValue} format="number" />
+              {" UoV"}
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">3</div>
+          <div className="step-content">
+            <div className="step-title">Spillover Value</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.consumptionValue} format="number" />
+              {" × ("}
+              <EditableValue value={inputs.spilloverMultiplier} onChange={(v) => onInputChange("spilloverMultiplier", v)} format="decimal" min={1} max={4} step={0.1} source={{ text: "Egger 2022 GE effects", url: "https://www.nber.org/papers/w26600" }} />
+              {" − 1) × (1 − "}
+              <EditableValue value={inputs.spilloverDiscount} onChange={(v) => onInputChange("spilloverDiscount", v)} format="percent" min={0} max={0.8} source={{ text: "GiveWell uncertainty discount" }} />
+              {") = "}
+              <ComputedValue value={intermediates.spilloverValue} format="number" />
+              {" UoV"}
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">4</div>
+          <div className="step-content">
+            <div className="step-title">Mortality Value</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.people} format="number" />
+              {" people × "}
+              <EditableValue value={inputs.proportionUnder5} onChange={(v) => onInputChange("proportionUnder5", v)} format="percent" min={0.05} max={0.3} />
+              {" u5 × "}
+              <EditableValue value={inputs.under5MortalityRate} onChange={(v) => onInputChange("under5MortalityRate", v)} format="percent" min={0.01} max={0.1} />
+              {" × "}
+              <EditableValue value={inputs.mortalityEffect} onChange={(v) => onInputChange("mortalityEffect", v)} format="percent" min={0} max={0.5} source={{ text: "Banerjee 2023 (46% finding × 50% discount)", url: "https://www.pnas.org/doi/10.1073/pnas.2215588120" }} />
+              {" × (1 − "}
+              <EditableValue value={inputs.mortalityDiscount} onChange={(v) => onInputChange("mortalityDiscount", v)} format="percent" min={0} max={0.8} />
+              {") × "}
+              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} />
+              {" = "}
+              <ComputedValue value={intermediates.mortalityValue} format="number" />
+              {" UoV"}
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card result-card">
+          <div className="step-content">
+            <div className="step-title">Final Cost-Effectiveness</div>
+            <div className="step-formula">
+              (<ComputedValue value={intermediates.consumptionValue} format="number" /> + <ComputedValue value={intermediates.spilloverValue} format="number" /> + <ComputedValue value={intermediates.mortalityValue} format="number" />) ÷ (grant × benchmark)
+            </div>
+            <ResultValue value={results.finalXBenchmark} unit="× benchmark" />
+          </div>
+        </div>
       </div>
 
-      <div className="calc-section">
-        <h5>2. Consumption Value (log utility)</h5>
-        <CalculationStep
-          label="ln((baseline + transfer/years) / baseline) × HH size × years × HHs"
-          value={intermediates.consumptionValue}
-          unit=" UoV"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>3. Spillover Value</h5>
-        <CalculationStep
-          label="Consumption × (multiplier - 1) × (1 - discount)"
-          formula={`${intermediates.consumptionValue.toFixed(0)} × ${(inputs.spilloverMultiplier-1).toFixed(1)} × ${(1-inputs.spilloverDiscount).toFixed(2)}`}
-          value={intermediates.spilloverValue}
-          unit=" UoV"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>4. Mortality Value</h5>
-        <CalculationStep
-          label="Under-5 deaths averted × moral weight"
-          formula={`${intermediates.deathsAverted.toFixed(2)} × ${inputs.moralWeightUnder5}`}
-          value={intermediates.mortalityValue}
-          unit=" UoV"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>5. Total Cost-Effectiveness</h5>
-        <CalculationStep
-          label="(Consumption + Spillover + Mortality) ÷ (Grant × benchmark)"
-          value={results.finalXBenchmark}
-          unit="× benchmark"
-          highlight
-        />
-      </div>
-
-      <div className="sources-section">
-        <h5>Parameter Sources</h5>
-        <SourceCitation
-          parameter="Spillover multiplier (2.5×)"
-          source="Egger et al. (2022) - Kenya GE effects"
-          url="https://www.nber.org/papers/w26600"
-        />
-        <SourceCitation
-          parameter="Mortality effect (23%)"
-          source="Banerjee et al. (2023), discounted 50%"
-          url="https://www.pnas.org/doi/10.1073/pnas.2215588120"
-        />
-        <SourceCitation
-          parameter="Baseline consumption"
-          source="GiveWell Nov 2024 Re-evaluation"
-          url="https://blog.givewell.org/2024/11/12/re-evaluating-the-impact-of-unconditional-cash-transfers/"
-        />
+      <div className="sources-footer">
+        <SourceLink text="GiveWell November 2024 Cash Transfer Re-evaluation" url="https://blog.givewell.org/2024/11/12/re-evaluating-the-impact-of-unconditional-cash-transfers/" />
       </div>
     </div>
   );
 }
 
 // Deworming Breakdown
-function DWBreakdown({ inputs, results }: { inputs: DewormingInputs; results: UnifiedResults }) {
+function DWBreakdown({
+  inputs,
+  results,
+  onInputChange
+}: {
+  inputs: DewormingInputs;
+  results: UnifiedResults;
+  onInputChange: (key: keyof DewormingInputs, value: number) => void;
+}) {
   const intermediates = useMemo(() => {
     const childrenTreated = inputs.grantSize / (inputs.costPerChildTreated * inputs.roundsPerYear);
     const childrenBenefiting = childrenTreated * inputs.infectionPrevalence;
@@ -516,7 +760,6 @@ function DWBreakdown({ inputs, results }: { inputs: DewormingInputs; results: Un
     const annualGain = inputs.baselineIncome * inputs.incomeEffect * inputs.wormBurdenAdjustment *
       inputs.programAdjustment * inputs.evidenceAdjustment;
 
-    // Simplified PV calculation
     let pvPerChild = 0;
     for (let y = 0; y < inputs.benefitDurationYears; y++) {
       const decay = Math.pow(1 - inputs.benefitDecayRate, y);
@@ -524,113 +767,160 @@ function DWBreakdown({ inputs, results }: { inputs: DewormingInputs; results: Un
       pvPerChild += annualGain * decay * discount;
     }
 
-    const totalPV = pvPerChild * childrenBenefiting;
     const logUtility = Math.log(1 + pvPerChild / inputs.baselineIncome);
     const totalValue = logUtility * childrenBenefiting;
 
-    return { childrenTreated, childrenBenefiting, annualGain, pvPerChild, totalPV, totalValue };
+    return { childrenTreated, childrenBenefiting, annualGain, pvPerChild, totalValue };
   }, [inputs]);
 
   return (
     <div className="calculation-breakdown">
-      <h4>Calculation Breakdown</h4>
+      <div className="calc-flow">
+        <div className="calc-step-card">
+          <div className="step-number">1</div>
+          <div className="step-content">
+            <div className="step-title">Children Treated</div>
+            <div className="step-formula">
+              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} />
+              {" ÷ "}
+              <EditableValue value={inputs.costPerChildTreated} onChange={(v) => onInputChange("costPerChildTreated", v)} format="currencySmall" min={0.2} max={2} step={0.05} source={{ text: "Cost per treatment round" }} />
+              {" = "}
+              <ComputedValue value={intermediates.childrenTreated} format="number" />
+            </div>
+          </div>
+        </div>
 
-      <div className="calc-section">
-        <h5>1. Children Treated</h5>
-        <CalculationStep
-          label="Grant ÷ Cost per child"
-          formula={`$${(inputs.grantSize/1000000).toFixed(1)}M ÷ $${inputs.costPerChildTreated.toFixed(2)}`}
-          value={intermediates.childrenTreated}
-          unit=" children"
-        />
-        <CalculationStep
-          label="Children benefiting (infected)"
-          formula={`${(intermediates.childrenTreated/1000000).toFixed(1)}M × ${(inputs.infectionPrevalence*100).toFixed(0)}%`}
-          value={intermediates.childrenBenefiting}
-          unit=" children"
-          indent={1}
-        />
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">2</div>
+          <div className="step-content">
+            <div className="step-title">Children Benefiting (infected)</div>
+            <div className="step-formula">
+              <ComputedValue value={intermediates.childrenTreated} format="number" />
+              {" × "}
+              <EditableValue value={inputs.infectionPrevalence} onChange={(v) => onInputChange("infectionPrevalence", v)} format="percent" min={0.1} max={0.8} source={{ text: "Worm infection prevalence" }} />
+              {" = "}
+              <ComputedValue value={intermediates.childrenBenefiting} format="number" />
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">3</div>
+          <div className="step-content">
+            <div className="step-title">Annual Income Gain (adjusted)</div>
+            <div className="step-formula">
+              <EditableValue value={inputs.baselineIncome} onChange={(v) => onInputChange("baselineIncome", v)} format="currency" min={400} max={1500} step={50} source={{ text: "Baseline income (PPP)" }} />
+              {" × "}
+              <EditableValue value={inputs.incomeEffect} onChange={(v) => onInputChange("incomeEffect", v)} format="percent" min={0.05} max={0.25} source={{ text: "Miguel & Kremer long-term effect", url: "https://www.pnas.org/doi/10.1073/pnas.2023185118" }} />
+              {" × "}
+              <EditableValue value={inputs.wormBurdenAdjustment} onChange={(v) => onInputChange("wormBurdenAdjustment", v)} format="percent" min={0.1} max={1} source={{ text: "Worm burden vs study population" }} />
+              {" × "}
+              <EditableValue value={inputs.programAdjustment} onChange={(v) => onInputChange("programAdjustment", v)} format="percent" min={0.3} max={1} />
+              {" × "}
+              <EditableValue value={inputs.evidenceAdjustment} onChange={(v) => onInputChange("evidenceAdjustment", v)} format="percent" min={0.2} max={1} source={{ text: "GiveWell replicability discount" }} />
+              {" = "}
+              <ComputedValue value={intermediates.annualGain} format="currency" />
+              {"/yr"}
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">4</div>
+          <div className="step-content">
+            <div className="step-title">Present Value per Child</div>
+            <div className="step-formula">
+              Sum over{" "}
+              <EditableValue value={inputs.benefitDurationYears} onChange={(v) => onInputChange("benefitDurationYears", v)} format="number" min={10} max={50} step={5} />
+              {" years, discounted at "}
+              <EditableValue value={inputs.discountRate} onChange={(v) => onInputChange("discountRate", v)} format="percent" min={0.01} max={0.1} />
+              {", decay "}
+              <EditableValue value={inputs.benefitDecayRate} onChange={(v) => onInputChange("benefitDecayRate", v)} format="percent" min={0} max={0.2} source={{ text: "Benefit decay (HLI critique: 12%)" }} />
+              {" = "}
+              <ComputedValue value={intermediates.pvPerChild} format="currency" />
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card">
+          <div className="step-number">5</div>
+          <div className="step-content">
+            <div className="step-title">Total Value (log utility)</div>
+            <div className="step-formula">
+              ln(1 + <ComputedValue value={intermediates.pvPerChild} format="currency" /> / baseline) × <ComputedValue value={intermediates.childrenBenefiting} format="number" /> = <ComputedValue value={intermediates.totalValue} format="number" /> UoV
+            </div>
+          </div>
+        </div>
+
+        <div className="calc-arrow">↓</div>
+
+        <div className="calc-step-card result-card">
+          <div className="step-content">
+            <div className="step-title">Final Cost-Effectiveness</div>
+            <ResultValue value={results.finalXBenchmark} unit="× benchmark" />
+          </div>
+        </div>
       </div>
 
-      <div className="calc-section">
-        <h5>2. Annual Income Gain (adjusted)</h5>
-        <CalculationStep
-          label="Baseline × Effect × Worm burden × Program × Evidence"
-          formula={`$${inputs.baselineIncome} × ${(inputs.incomeEffect*100).toFixed(0)}% × ${(inputs.wormBurdenAdjustment*100).toFixed(0)}% × ${(inputs.programAdjustment*100).toFixed(0)}% × ${(inputs.evidenceAdjustment*100).toFixed(0)}%`}
-          value={intermediates.annualGain}
-          unit="/year"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>3. Present Value per Child</h5>
-        <CalculationStep
-          label={`Sum over ${inputs.benefitDurationYears} years, discounted at ${(inputs.discountRate*100).toFixed(0)}%`}
-          value={intermediates.pvPerChild}
-          unit=" (PV)"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>4. Total Value (log utility)</h5>
-        <CalculationStep
-          label="ln(1 + PV/baseline) × children benefiting"
-          value={intermediates.totalValue}
-          unit=" UoV"
-        />
-      </div>
-
-      <div className="calc-section">
-        <h5>5. Cost-Effectiveness</h5>
-        <CalculationStep
-          label="Total value ÷ (Grant × benchmark)"
-          value={results.finalXBenchmark}
-          unit="× benchmark"
-          highlight
-        />
-      </div>
-
-      <div className="sources-section">
-        <h5>Parameter Sources</h5>
-        <SourceCitation
-          parameter="Income effect (13%)"
-          source="Miguel & Kremer (2004) + 20-year follow-up"
-          url="https://www.pnas.org/doi/10.1073/pnas.2023185118"
-        />
-        <SourceCitation
-          parameter="Worm burden adjustment"
-          source="GiveWell Sept 2023 CEA"
-          url="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness/cost-effectiveness-models"
-        />
-        <SourceCitation
-          parameter="Evidence adjustment (50%)"
-          source="GiveWell replicability discount"
-          url="https://www.givewell.org/international/technical/programs/deworming"
-        />
+      <div className="sources-footer">
+        <SourceLink text="GiveWell Deworming Analysis" url="https://www.givewell.org/international/technical/programs/deworming" />
       </div>
     </div>
   );
 }
 
-// Main component that renders the appropriate breakdown
+// Main component
 interface CalculationBreakdownProps {
   charityInputs: CharityInputs;
   results: UnifiedResults;
+  onInputChange: (charityInputs: CharityInputs) => void;
 }
 
-export function CalculationBreakdown({ charityInputs, results }: CalculationBreakdownProps) {
+export function CalculationBreakdown({ charityInputs, results, onInputChange }: CalculationBreakdownProps) {
   switch (charityInputs.type) {
     case "amf":
-      return <AMFBreakdown inputs={charityInputs.inputs} results={results} />;
+      return <AMFBreakdown
+        inputs={charityInputs.inputs}
+        results={results}
+        onInputChange={(key, value) => onInputChange({ type: "amf", inputs: { ...charityInputs.inputs, [key]: value } })}
+      />;
     case "malaria-consortium":
-      return <MCBreakdown inputs={charityInputs.inputs} results={results} />;
+      return <MCBreakdown
+        inputs={charityInputs.inputs}
+        results={results}
+        onInputChange={(key, value) => onInputChange({ type: "malaria-consortium", inputs: { ...charityInputs.inputs, [key]: value } })}
+      />;
     case "helen-keller":
-      return <HKBreakdown inputs={charityInputs.inputs} results={results} />;
+      return <HKBreakdown
+        inputs={charityInputs.inputs}
+        results={results}
+        onInputChange={(key, value) => onInputChange({ type: "helen-keller", inputs: { ...charityInputs.inputs, [key]: value } })}
+      />;
     case "new-incentives":
-      return <NIBreakdown inputs={charityInputs.inputs} results={results} />;
+      return <NIBreakdown
+        inputs={charityInputs.inputs}
+        results={results}
+        onInputChange={(key, value) => onInputChange({ type: "new-incentives", inputs: { ...charityInputs.inputs, [key]: value } })}
+      />;
     case "givedirectly":
-      return <GDBreakdown inputs={charityInputs.inputs} results={results} />;
+      return <GDBreakdown
+        inputs={charityInputs.inputs}
+        results={results}
+        onInputChange={(key, value) => onInputChange({ type: "givedirectly", inputs: { ...charityInputs.inputs, [key]: value } })}
+      />;
     case "deworming":
-      return <DWBreakdown inputs={charityInputs.inputs} results={results} />;
+      return <DWBreakdown
+        inputs={charityInputs.inputs}
+        results={results}
+        onInputChange={(key, value) => onInputChange({ type: "deworming", inputs: { ...charityInputs.inputs, [key]: value } })}
+      />;
   }
 }

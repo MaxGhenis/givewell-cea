@@ -834,11 +834,181 @@ body {
   font-style: italic;
 }
 
-/* Calculation Breakdown */
+/* Calculation Breakdown - Inline Editable */
 .calculation-breakdown {
-  margin-top: var(--space-lg);
-  padding-top: var(--space-lg);
-  border-top: 2px solid var(--color-border);
+  margin-top: var(--space-md);
+}
+
+.calc-flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.calc-step-card {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.calc-step-card:hover {
+  border-color: var(--color-primary-lighter);
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  background: var(--color-primary-lighter);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-title {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.step-formula {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.calc-arrow {
+  text-align: center;
+  color: var(--color-primary-lighter);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: var(--space-xs) 0;
+}
+
+/* Editable values - inline number inputs */
+.editable-value-wrapper {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.editable-value {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: text;
+}
+
+.editable-display {
+  background: linear-gradient(135deg, var(--color-bg-warm) 0%, var(--color-bg) 100%);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--color-primary);
+  cursor: text;
+  transition: all 0.15s ease;
+}
+
+.editable-value-wrapper:hover .editable-display {
+  border-color: var(--color-primary);
+  background: var(--color-bg-card);
+}
+
+.editable-value-wrapper:focus-within .editable-display {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(13, 92, 99, 0.15);
+  background: var(--color-bg-card);
+}
+
+.editable-value:focus + .editable-display {
+  border-color: var(--color-primary);
+}
+
+.source-tooltip {
+  margin-left: 2px;
+  font-size: 0.75rem;
+  color: var(--color-primary-lighter);
+  cursor: help;
+}
+
+.source-tooltip a {
+  color: var(--color-primary-lighter);
+  text-decoration: none;
+}
+
+.source-tooltip a:hover {
+  color: var(--color-primary);
+}
+
+/* Computed values (read-only) */
+.computed-value {
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--color-text);
+  background: var(--color-bg-warm);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* Result value (highlighted final) */
+.result-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  display: block;
+  margin-top: var(--space-sm);
+}
+
+.result-card {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  border-color: var(--color-primary);
+}
+
+.result-card .step-title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.result-card .step-formula {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+}
+
+.result-card .computed-value {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.result-card .result-value {
+  color: white;
+}
+
+/* Adjustments list */
+.adjustments-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.adjustments-list > div {
+  font-size: 0.9rem;
 }
 
 .calculation-breakdown h4 {
@@ -989,8 +1159,36 @@ body {
 .param-description {
   font-size: 0.9rem;
   color: var(--color-text-secondary);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-sm);
   line-height: 1.5;
+}
+
+.edit-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-md);
+  font-style: italic;
+}
+
+/* Sources footer */
+.sources-footer {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px dashed var(--color-border);
+  font-size: 0.85rem;
+}
+
+.source-link-row {
+  color: var(--color-text-muted);
+}
+
+.source-link-row a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.source-link-row a:hover {
+  text-decoration: underline;
 }
 
 /* Disclaimer banner */
