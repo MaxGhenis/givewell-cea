@@ -25,6 +25,13 @@ import {
   type NewIncentivesInputs,
   BENCHMARK_VALUE_PER_DOLLAR as NI_BENCHMARK,
 } from "./new-incentives";
+import {
+  type MoralWeights,
+  getAge5PlusMoralWeight,
+} from "../moral-weights";
+
+export { DEFAULT_MORAL_WEIGHTS, MORAL_WEIGHT_PRESETS } from "../moral-weights";
+export type { MoralWeights, MoralWeightPreset } from "../moral-weights";
 
 export type CharityType = "amf" | "malaria-consortium" | "helen-keller" | "new-incentives";
 
@@ -221,5 +228,53 @@ export function getDefaultInputs(type: CharityType): CharityInputs {
       return { type: "helen-keller", inputs: { ...DEFAULT_HK_INPUTS } };
     case "new-incentives":
       return { type: "new-incentives", inputs: { ...DEFAULT_NI_INPUTS } };
+  }
+}
+
+/**
+ * Apply custom moral weights to charity inputs.
+ * This updates the moral weight parameters in each charity's inputs
+ * based on the user's custom moral weight settings.
+ */
+export function applyMoralWeights(
+  charityInputs: CharityInputs,
+  moralWeights: MoralWeights
+): CharityInputs {
+  const age5PlusWeight = getAge5PlusMoralWeight(moralWeights);
+
+  switch (charityInputs.type) {
+    case "amf":
+      return {
+        type: "amf",
+        inputs: {
+          ...charityInputs.inputs,
+          moralWeightUnder5: moralWeights.under5,
+          moralWeight5Plus: age5PlusWeight,
+        },
+      };
+    case "malaria-consortium":
+      return {
+        type: "malaria-consortium",
+        inputs: {
+          ...charityInputs.inputs,
+          moralWeightUnder5: moralWeights.under5,
+        },
+      };
+    case "helen-keller":
+      return {
+        type: "helen-keller",
+        inputs: {
+          ...charityInputs.inputs,
+          moralWeightUnder5: moralWeights.under5,
+        },
+      };
+    case "new-incentives":
+      return {
+        type: "new-incentives",
+        inputs: {
+          ...charityInputs.inputs,
+          moralWeightUnder5: moralWeights.under5,
+        },
+      };
   }
 }

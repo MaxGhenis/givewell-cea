@@ -3,13 +3,17 @@ import {
   CHARITY_CONFIGS,
   calculateCharity,
   getDefaultInputs,
+  applyMoralWeights,
   type CharityInputs,
   type CharityType,
   type UnifiedResults,
+  type MoralWeights,
   DEFAULT_AMF_INPUTS,
   DEFAULT_MC_INPUTS,
   DEFAULT_HK_INPUTS,
   DEFAULT_NI_INPUTS,
+  DEFAULT_MORAL_WEIGHTS,
+  MORAL_WEIGHT_PRESETS,
 } from "./lib/models";
 import type { AMFInputs } from "./lib/models/amf";
 import type { MalariaConsortiumInputs } from "./lib/models/malaria-consortium";
@@ -515,6 +519,105 @@ function NIParams({ inputs, onChange }: { inputs: NewIncentivesInputs; onChange:
   );
 }
 
+interface MoralWeightsPanelProps {
+  weights: MoralWeights;
+  onChange: (weights: MoralWeights) => void;
+  onReset: () => void;
+}
+
+function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProps) {
+  const [selectedPreset, setSelectedPreset] = useState<string>("custom");
+
+  const handlePresetChange = (presetName: string) => {
+    setSelectedPreset(presetName);
+    const preset = MORAL_WEIGHT_PRESETS.find((p) => p.name === presetName);
+    if (preset) {
+      onChange(preset.weights);
+    }
+  };
+
+  const handleWeightChange = (key: keyof MoralWeights, value: number) => {
+    setSelectedPreset("custom");
+    onChange({ ...weights, [key]: value });
+  };
+
+  return (
+    <div className="moral-weights-panel">
+      <h3>Moral Weights</h3>
+      <p className="panel-description">
+        Adjust the value assigned to averting deaths at different ages.
+        Higher values mean saving that age group is considered more valuable.
+      </p>
+
+      <div className="preset-selector">
+        <label>Preset:</label>
+        <select
+          value={selectedPreset}
+          onChange={(e) => handlePresetChange(e.target.value)}
+        >
+          <option value="custom">Custom</option>
+          {MORAL_WEIGHT_PRESETS.map((preset) => (
+            <option key={preset.name} value={preset.name}>
+              {preset.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="weights-grid">
+        <div className="weight-input">
+          <label>Under 5 years</label>
+          <div className="weight-value-row">
+            <input
+              type="range"
+              min={50}
+              max={200}
+              step={1}
+              value={weights.under5}
+              onChange={(e) => handleWeightChange("under5", parseFloat(e.target.value))}
+            />
+            <span className="weight-value">{weights.under5.toFixed(1)}</span>
+          </div>
+        </div>
+
+        <div className="weight-input">
+          <label>Ages 5-14</label>
+          <div className="weight-value-row">
+            <input
+              type="range"
+              min={50}
+              max={150}
+              step={1}
+              value={weights.age5to14}
+              onChange={(e) => handleWeightChange("age5to14", parseFloat(e.target.value))}
+            />
+            <span className="weight-value">{weights.age5to14.toFixed(1)}</span>
+          </div>
+        </div>
+
+        <div className="weight-input">
+          <label>Ages 15+</label>
+          <div className="weight-value-row">
+            <input
+              type="range"
+              min={30}
+              max={120}
+              step={1}
+              value={weights.age15plus}
+              onChange={(e) => handleWeightChange("age15plus", parseFloat(e.target.value))}
+            />
+            <span className="weight-value">{weights.age15plus.toFixed(1)}</span>
+          </div>
+        </div>
+      </div>
+
+      <button className="reset-weights-btn" onClick={onReset}>
+        Reset to GiveWell defaults
+      </button>
+    </div>
+  );
+}
+
 interface CharityCardProps {
   config: (typeof CHARITY_CONFIGS)[number];
   charityInputs: CharityInputs;
@@ -652,6 +755,11 @@ function CharityCard({
 function App() {
   const [expandedCharity, setExpandedCharity] = useState<CharityType | null>(null);
 
+  // Moral weights state
+  const [moralWeights, setMoralWeights] = useState<MoralWeights>({
+    ...DEFAULT_MORAL_WEIGHTS,
+  });
+
   // Initialize all charity inputs with defaults
   const [charityInputs, setCharityInputs] = useState<Record<CharityType, CharityInputs>>(() => {
     const inputs: Partial<Record<CharityType, CharityInputs>> = {};
@@ -668,6 +776,14 @@ function App() {
     }));
   }, []);
 
+  const handleMoralWeightsChange = useCallback((weights: MoralWeights) => {
+    setMoralWeights(weights);
+  }, []);
+
+  const resetMoralWeights = useCallback(() => {
+    setMoralWeights({ ...DEFAULT_MORAL_WEIGHTS });
+  }, []);
+
   const resetToDefaults = useCallback(() => {
     setCharityInputs({
       "amf": { type: "amf", inputs: { ...DEFAULT_AMF_INPUTS } },
@@ -675,19 +791,25 @@ function App() {
       "helen-keller": { type: "helen-keller", inputs: { ...DEFAULT_HK_INPUTS } },
       "new-incentives": { type: "new-incentives", inputs: { ...DEFAULT_NI_INPUTS } },
     });
+    setMoralWeights({ ...DEFAULT_MORAL_WEIGHTS });
   }, []);
 
-  // Calculate results for all charities
+  // Calculate results for all charities with moral weights applied
   const charityResults = useMemo(() => {
     const results: Record<CharityType, UnifiedResults> = {} as Record<
       CharityType,
       UnifiedResults
     >;
     for (const config of CHARITY_CONFIGS) {
-      results[config.type] = calculateCharity(charityInputs[config.type]);
+      // Apply moral weights to charity inputs before calculating
+      const inputsWithWeights = applyMoralWeights(
+        charityInputs[config.type],
+        moralWeights
+      );
+      results[config.type] = calculateCharity(inputsWithWeights);
     }
     return results;
-  }, [charityInputs]);
+  }, [charityInputs, moralWeights]);
 
   // Calculate max xBenchmark for bar scaling
   const maxXBenchmark = useMemo(() => {
@@ -797,6 +919,12 @@ function App() {
               </div>
             </div>
           </div>
+
+          <MoralWeightsPanel
+            weights={moralWeights}
+            onChange={handleMoralWeightsChange}
+            onReset={resetMoralWeights}
+          />
 
           <div className="methodology-panel">
             <h3>About This Tool</h3>
