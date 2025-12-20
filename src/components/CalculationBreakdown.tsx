@@ -5,7 +5,7 @@
  * cost-effectiveness analysis with inline editable values.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import type { AMFInputs } from "../lib/models/amf";
 import type { MalariaConsortiumInputs } from "../lib/models/malaria-consortium";
 import type { HelenKellerInputs } from "../lib/models/helen-keller";
@@ -26,6 +26,10 @@ interface EditableValueProps {
 }
 
 function EditableValue({ value, onChange, format, min, max, step = 0.01, source }: EditableValueProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const displayValue = () => {
     switch (format) {
       case "currency":
@@ -41,35 +45,72 @@ function EditableValue({ value, onChange, format, min, max, step = 0.01, source 
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let newValue = parseFloat(e.target.value);
-    if (isNaN(newValue)) return;
-    if (min !== undefined) newValue = Math.max(min, newValue);
-    if (max !== undefined) newValue = Math.min(max, newValue);
-    onChange(newValue);
+  const handleClick = () => {
+    const editValue = format === "percent" ? (value * 100).toFixed(2) : value.toString();
+    setInputValue(editValue);
+    setIsEditing(true);
   };
 
-  const inputValue = format === "percent" ? value * 100 : value;
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleBlur = () => {
+    let newValue = parseFloat(inputValue);
+    if (!isNaN(newValue)) {
+      if (format === "percent") newValue = newValue / 100;
+      if (min !== undefined) newValue = Math.max(min, newValue);
+      if (max !== undefined) newValue = Math.min(max, newValue);
+      onChange(newValue);
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleBlur();
+    } else if (e.key === "Escape") {
+      setIsEditing(false);
+    }
+  };
+
   const inputStep = format === "percent" ? (step || 0.01) * 100 : step;
+
+  // Get a short label from the source text (first few words or abbreviation)
+  const getShortLabel = (text: string) => {
+    // Return first ~20 chars or first 3 words
+    const words = text.split(" ");
+    if (words.length <= 3) return text;
+    return words.slice(0, 3).join(" ") + "…";
+  };
 
   return (
     <span className="editable-value-wrapper">
-      <input
-        type="number"
-        className="editable-value"
-        value={inputValue}
-        onChange={handleChange}
-        step={inputStep}
-        min={format === "percent" && min !== undefined ? min * 100 : min}
-        max={format === "percent" && max !== undefined ? max * 100 : max}
-      />
-      <span className="editable-display">{displayValue()}</span>
+      {isEditing ? (
+        <input
+          ref={inputRef}
+          type="number"
+          className="editable-value-input"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          step={inputStep}
+        />
+      ) : (
+        <span className="editable-display" onClick={handleClick} title="Click to edit">{displayValue()}</span>
+      )}
       {source && (
-        <span className="source-tooltip">
+        <span className="param-label" title={source.text}>
           {source.url ? (
-            <a href={source.url} target="_blank" rel="noopener noreferrer" title={source.text}>ⓘ</a>
+            <a href={source.url} target="_blank" rel="noopener noreferrer">
+              {getShortLabel(source.text)}
+            </a>
           ) : (
-            <span title={source.text}>ⓘ</span>
+            getShortLabel(source.text)
           )}
         </span>
       )}

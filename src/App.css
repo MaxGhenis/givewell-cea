@@ -906,14 +906,6 @@ body {
   position: relative;
 }
 
-.editable-value {
-  position: absolute;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
-  cursor: text;
-}
-
 .editable-display {
   background: linear-gradient(135deg, var(--color-bg-warm) 0%, var(--color-bg) 100%);
   border: 1px solid var(--color-border);
@@ -922,39 +914,52 @@ body {
   font-family: var(--font-display);
   font-weight: 500;
   color: var(--color-primary);
-  cursor: text;
+  cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.editable-value-wrapper:hover .editable-display {
+.editable-display:hover {
   border-color: var(--color-primary);
   background: var(--color-bg-card);
 }
 
-.editable-value-wrapper:focus-within .editable-display {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(13, 92, 99, 0.15);
-  background: var(--color-bg-card);
-}
-
-.editable-value:focus + .editable-display {
-  border-color: var(--color-primary);
-}
-
-.source-tooltip {
-  margin-left: 2px;
-  font-size: 0.75rem;
-  color: var(--color-primary-lighter);
-  cursor: help;
-}
-
-.source-tooltip a {
-  color: var(--color-primary-lighter);
-  text-decoration: none;
-}
-
-.source-tooltip a:hover {
+.editable-value-input {
+  font-family: var(--font-display);
+  font-size: inherit;
+  font-weight: 500;
   color: var(--color-primary);
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-primary);
+  border-radius: 4px;
+  padding: 2px 6px;
+  width: 80px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(13, 92, 99, 0.15);
+}
+
+.editable-value-input::-webkit-inner-spin-button,
+.editable-value-input::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+/* Parameter label - visible description next to editable value */
+.param-label {
+  margin-left: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  cursor: help;
+  font-style: italic;
+}
+
+.param-label a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--color-text-muted);
+}
+
+.param-label a:hover {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 /* Computed values (read-only) */
