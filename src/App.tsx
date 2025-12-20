@@ -165,6 +165,12 @@ function CharityCard({
     ? (uncertainty.percentile90 / maxXBenchmark) * 100
     : barWidth;
 
+  // Get grant size for display in labels
+  const grantSize = charityInputs.inputs.grantSize;
+  const grantLabel = grantSize >= 1_000_000
+    ? `$${(grantSize / 1_000_000).toFixed(grantSize % 1_000_000 === 0 ? 0 : 1)}M`
+    : `$${(grantSize / 1_000).toFixed(0)}K`;
+
   return (
     <div className="charity-card">
       <div className="charity-header" style={{ borderLeftColor: config.color }}>
@@ -236,13 +242,13 @@ function CharityCard({
             <span className="metric-value-sm">
               {results.deathsAvertedUnder5 === 0 ? "N/A" : results.deathsAvertedUnder5.toFixed(0)}
             </span>
-            <span className="metric-label-sm">deaths averted per $1M</span>
+            <span className="metric-label-sm">deaths averted per {grantLabel}</span>
           </div>
           <div className="metric">
             <span className="metric-value-sm">
               {formatNumber(results.peopleReached, 0)}
             </span>
-            <span className="metric-label-sm">children reached per $1M</span>
+            <span className="metric-label-sm">people reached per {grantLabel}</span>
           </div>
         </div>
       </div>
@@ -484,7 +490,7 @@ function App() {
                     .toFixed(0)}
                 </span>
                 <span className="stat-label">
-                  Total deaths averted per $5M
+                  Total deaths averted (all grants)
                 </span>
               </div>
             </div>
