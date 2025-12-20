@@ -1,0 +1,218 @@
+{
+  "malariaConsortium": {
+    "Burkina Faso": {
+      "inputs": {
+        "grantSize": 1000000,
+        "costPerChildReached": 6.332845822,
+        "malariaMortalityRate": 0.004748326636,
+        "proportionMortalityDuringSeason": 0.7,
+        "smcEffect": 0.7936949983,
+        "moralWeightUnder5": 116.25262,
+        "adjustmentOlderMortalities": 0.06857112185,
+        "adjustmentDevelopmental": 0.3132874116,
+        "adjustmentProgramBenefits": 0.191,
+        "adjustmentGrantee": -0.08,
+        "adjustmentLeverage": -0.004005444451,
+        "adjustmentFunging": -0.3963757375
+      },
+      "expected": {
+        "initialXBenchmark": 14.43671251,
+        "finalXBenchmark": 13.31086766
+      }
+    },
+    "Chad": {
+      "inputs": {
+        "grantSize": 1000000,
+        "costPerChildReached": 7.014881547,
+        "malariaMortalityRate": 0.004788735461,
+        "proportionMortalityDuringSeason": 0.7,
+        "smcEffect": 0.7936949983,
+        "moralWeightUnder5": 116.25262,
+        "adjustmentOlderMortalities": 0.05499180912,
+        "adjustmentDevelopmental": 0.2079650431,
+        "adjustmentProgramBenefits": 0.241,
+        "adjustmentGrantee": -0.08,
+        "adjustmentLeverage": -0.005978161521,
+        "adjustmentFunging": -0.2278305143
+      },
+      "expected": {
+        "initialXBenchmark": 13.14398761,
+        "finalXBenchmark": 14.65302985
+      }
+    },
+    "Cote_dIvoire": {
+      "inputs": {
+        "grantSize": 1000000,
+        "costPerChildReached": 11.44972958,
+        "malariaMortalityRate": 0.004222107914,
+        "proportionMortalityDuringSeason": 0.7,
+        "smcEffect": 0.7936949983,
+        "moralWeightUnder5": 116.25262,
+        "adjustmentOlderMortalities": 0.1046351707,
+        "adjustmentDevelopmental": 0.3707863359,
+        "adjustmentProgramBenefits": 0.141,
+        "adjustmentGrantee": -0.08,
+        "adjustmentLeverage": -0.008251293564,
+        "adjustmentFunging": -0.2369353924
+      },
+      "expected": {
+        "initialXBenchmark": 7.100039034,
+        "finalXBenchmark": 8.518485599
+      }
+    }
+  },
+  "helenKeller": {
+    "Burkina_Faso": {
+      "inputs": {
+        "grantSize": 1000000,
+        "costPerPersonUnder5": 2.342461127,
+        "proportionReachedCounterfactual": 0.29,
+        "mortalityRateUnder5": 0.00791376435,
+        "vasEffect": 0.07838157426,
+        "moralWeightUnder5": 118.73259,
+        "adjustmentDevelopmental": 0.245176,
+        "adjustmentProgramBenefits": 0.565,
+        "adjustmentGrantee": -0.04,
+        "adjustmentLeverage": -0.01833780533,
+        "adjustmentFunging": -0.4312943169
+      },
+      "expected": {
+        "peopleUnder5Reached": 426901.4279,
+        "additionalChildrenCovered": 303100.0138,
+        "deathsAvertedUnder5": 188.0109102,
+        "costPerDeathAverted": 5318.840267,
+        "initialXBenchmark": 6.654649671,
+        "finalXBenchmark": 6.851640881,
+        "finalCostPerLifeSaved": 11001.99751
+      }
+    },
+    "Cameroon": {
+      "inputs": {
+        "grantSize": 1000000,
+        "costPerPersonUnder5": 1.726098382,
+        "proportionReachedCounterfactual": 0.225,
+        "mortalityRateUnder5": 0.007974420725,
+        "vasEffect": 0.05093724878,
+        "moralWeightUnder5": 118.73259,
+        "adjustmentDevelopmental": 0.245176,
+        "adjustmentProgramBenefits": 0.565,
+        "adjustmentGrantee": -0.14,
+        "adjustmentLeverage": -0.03518310036,
+        "adjustmentFunging": -0.2182221413
+      },
+      "expected": {
+        "peopleUnder5Reached": 579341.2534,
+        "additionalChildrenCovered": 448989.4714,
+        "deathsAvertedUnder5": 182.3773018,
+        "costPerDeathAverted": 5483.138472,
+        "initialXBenchmark": 6.455247996,
+        "finalXBenchmark": 8.076838564,
+        "finalCostPerLifeSaved": 9333.074486
+      }
+    },
+    "DRC": {
+      "inputs": {
+        "grantSize": 1000000,
+        "costPerPersonUnder5": 0.7726989139,
+        "proportionReachedCounterfactual": 0.2,
+        "mortalityRateUnder5": 0.008000689165,
+        "vasEffect": 0.0821653677,
+        "moralWeightUnder5": 118.73259,
+        "adjustmentDevelopmental": 0.245176,
+        "adjustmentProgramBenefits": 0.565,
+        "adjustmentGrantee": -0.04,
+        "adjustmentLeverage": -0.01067378404,
+        "adjustmentFunging": -0.3262977865
+      },
+      "expected": {
+        "peopleUnder5Reached": 1294165.143,
+        "additionalChildrenCovered": 1035332.114,
+        "deathsAvertedUnder5": 680.606177,
+        "costPerDeathAverted": 1469.278467,
+        "initialXBenchmark": 24.09006831,
+        "finalXBenchmark": 29.88040629,
+        "finalCostPerLifeSaved": 2522.781491
+      }
+    }
+  },
+  "newIncentives": {
+    "Bauchi": {
+      "inputs": {
+        "grantSize": 1000000,
+        "costPerChildReached": 18.21258998,
+        "proportionReachedCounterfactual": 0.8147744577,
+        "probabilityDeathUnvaccinated": 0.0565350252,
+        "vaccineEffect": 0.5225560494,
+        "moralWeightUnder5": 116.25262,
+        "adjustmentOlderMortalities": 0.1828063546,
+        "adjustmentDevelopmental": 0.2802178229,
+        "adjustmentConsumption": 0.04675478943,
+        "adjustmentProgramBenefits": 0.503,
+        "adjustmentGrantee": -0.07,
+        "adjustmentLeverage": -0.04421833055,
+        "adjustmentFunging": -0.0934652923
+      },
+      "expected": {
+        "childrenReached": 54907.07257,
+        "additionalChildrenVaccinated": 10170.19229,
+        "deathsAvertedUnder5": 300.4551374,
+        "costPerDeathAverted": 3328.283912,
+        "initialXBenchmark": 10.48909817,
+        "finalXBenchmark": 20.03960646,
+        "finalCostPerLifeSaved": 2684.193824
+      }
+    },
+    "Gombe": {
+      "inputs": {
+        "grantSize": 1000000,
+        "costPerChildReached": 18.21258998,
+        "proportionReachedCounterfactual": 0.8800470161,
+        "probabilityDeathUnvaccinated": 0.0419922518,
+        "vaccineEffect": 0.5273839374,
+        "moralWeightUnder5": 116.25262,
+        "adjustmentOlderMortalities": 0.1683225749,
+        "adjustmentDevelopmental": 0.2827472661,
+        "adjustmentConsumption": 0.09731145904,
+        "adjustmentProgramBenefits": 0.503,
+        "adjustmentGrantee": -0.07,
+        "adjustmentLeverage": -0.05685457843,
+        "adjustmentFunging": -0.08702584485
+      },
+      "expected": {
+        "childrenReached": 54907.07257,
+        "additionalChildrenVaccinated": 6586.267192,
+        "deathsAvertedUnder5": 145.8597307,
+        "costPerDeathAverted": 6855.901865,
+        "initialXBenchmark": 5.09206482,
+        "finalXBenchmark": 10.02083846,
+        "finalCostPerLifeSaved": 5642.026751
+      }
+    },
+    "Jigawa": {
+      "inputs": {
+        "grantSize": 1000000,
+        "costPerChildReached": 18.21258998,
+        "proportionReachedCounterfactual": 0.8577882271,
+        "probabilityDeathUnvaccinated": 0.06324757807,
+        "vaccineEffect": 0.5508425012,
+        "moralWeightUnder5": 116.25262,
+        "adjustmentOlderMortalities": 0.1666117175,
+        "adjustmentDevelopmental": 0.2828406239,
+        "adjustmentConsumption": 0.05224792387,
+        "adjustmentProgramBenefits": 0.503,
+        "adjustmentGrantee": -0.07,
+        "adjustmentLeverage": -0.0377404287,
+        "adjustmentFunging": -0.0927356631
+      },
+      "expected": {
+        "childrenReached": 54907.07257,
+        "additionalChildrenVaccinated": 7808.432134,
+        "deathsAvertedUnder5": 272.0415129,
+        "costPerDeathAverted": 3675.909567,
+        "initialXBenchmark": 9.497158746,
+        "finalXBenchmark": 18.1775049,
+        "finalCostPerLifeSaved": 3012.074875
+      }
+    }
+  }
+}
