@@ -31,6 +31,11 @@ import {
   BENCHMARK_VALUE_PER_DOLLAR as GD_BENCHMARK,
 } from "./givedirectly";
 import {
+  calculateDeworming,
+  type DewormingInputs,
+  BENCHMARK_VALUE_PER_DOLLAR as DW_BENCHMARK,
+} from "./deworming";
+import {
   type MoralWeights,
   getAge5PlusMoralWeight,
 } from "../moral-weights";
@@ -38,7 +43,7 @@ import {
 export { DEFAULT_MORAL_WEIGHTS, MORAL_WEIGHT_PRESETS } from "../moral-weights";
 export type { MoralWeights, MoralWeightPreset } from "../moral-weights";
 
-export type CharityType = "amf" | "malaria-consortium" | "helen-keller" | "new-incentives" | "givedirectly";
+export type CharityType = "amf" | "malaria-consortium" | "helen-keller" | "new-incentives" | "givedirectly" | "deworming";
 
 export interface UnifiedResults {
   /** Number of children/people reached */
@@ -104,6 +109,14 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     color: "#F5A623",
     description: "Provides unconditional cash transfers directly to people in poverty",
     logoUrl: "https://cdn.prod.website-files.com/5bec3c85cd9b920d3af2f0a8/5bec3c85cd9b92b19ff2f0b7_gd-logo-orange.svg",
+  },
+  {
+    name: "Deworm the World",
+    abbrev: "DtW",
+    type: "deworming",
+    color: "#8B5CF6",
+    description: "Provides school-based deworming to prevent worm infections in children",
+    logoUrl: "https://www.evidenceaction.org/wp-content/uploads/2024/01/EA-Logo-Full-Colour-2024-copy.svg",
   },
 ];
 
@@ -188,12 +201,31 @@ export const DEFAULT_GD_INPUTS: GiveDirectlyInputs = {
   mortalityDiscount: 0.50,
 };
 
+// Deworm the World defaults (GiveWell September 2023)
+export const DEFAULT_DW_INPUTS: DewormingInputs = {
+  grantSize: 1_000_000,
+  costPerChildTreated: 0.50,
+  roundsPerYear: 1,
+  infectionPrevalence: 0.40,
+  incomeEffect: 0.13,
+  wormBurdenAdjustment: 0.25,
+  benefitDurationYears: 40,
+  benefitDecayRate: 0.0,
+  discountRate: 0.04,
+  baselineIncome: 800,
+  averageAgeAtTreatment: 8,
+  ageIncomeBenefitsBegin: 18,
+  programAdjustment: 0.75,
+  evidenceAdjustment: 0.50,
+};
+
 export type CharityInputs =
   | { type: "amf"; inputs: AMFInputs }
   | { type: "malaria-consortium"; inputs: MalariaConsortiumInputs }
   | { type: "helen-keller"; inputs: HelenKellerInputs }
   | { type: "new-incentives"; inputs: NewIncentivesInputs }
-  | { type: "givedirectly"; inputs: GiveDirectlyInputs };
+  | { type: "givedirectly"; inputs: GiveDirectlyInputs }
+  | { type: "deworming"; inputs: DewormingInputs };
 
 /**
  * Calculate cost-effectiveness for any charity and return unified results
@@ -260,6 +292,18 @@ export function calculateCharity(charity: CharityInputs): UnifiedResults {
         benchmarkValue: GD_BENCHMARK,
       };
     }
+    case "deworming": {
+      const results = calculateDeworming(charity.inputs);
+      // Deworming primarily affects income, not mortality
+      return {
+        peopleReached: results.childrenTreated,
+        deathsAvertedUnder5: 0, // Deworming doesn't directly avert deaths
+        costPerDeathAverted: Infinity,
+        initialXBenchmark: results.xBenchmark,
+        finalXBenchmark: results.xBenchmark,
+        benchmarkValue: DW_BENCHMARK,
+      };
+    }
   }
 }
 
@@ -278,6 +322,8 @@ export function getDefaultInputs(type: CharityType): CharityInputs {
       return { type: "new-incentives", inputs: { ...DEFAULT_NI_INPUTS } };
     case "givedirectly":
       return { type: "givedirectly", inputs: { ...DEFAULT_GD_INPUTS } };
+    case "deworming":
+      return { type: "deworming", inputs: { ...DEFAULT_DW_INPUTS } };
   }
 }
 
@@ -334,5 +380,8 @@ export function applyMoralWeights(
           moralWeightUnder5: moralWeights.under5,
         },
       };
+    case "deworming":
+      // Deworming doesn't use moral weights (income-based, not mortality)
+      return charityInputs;
   }
 }

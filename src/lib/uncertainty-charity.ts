@@ -22,6 +22,7 @@ import type { MalariaConsortiumInputs } from "./models/malaria-consortium";
 import type { HelenKellerInputs } from "./models/helen-keller";
 import type { NewIncentivesInputs } from "./models/new-incentives";
 import type { GiveDirectlyInputs } from "./models/givedirectly";
+import type { DewormingInputs } from "./models/deworming";
 
 /**
  * Configuration for uncertainty ranges.
@@ -243,6 +244,47 @@ function sampleGDInputs(
 }
 
 /**
+ * Sample Deworming inputs with uncertainty
+ */
+function sampleDWInputs(
+  baseInputs: DewormingInputs,
+  config: UncertaintyConfig
+): DewormingInputs {
+  return {
+    ...baseInputs,
+    costPerChildTreated: sampleLogNormal(
+      baseInputs.costPerChildTreated,
+      baseInputs.costPerChildTreated * (1 - config.costPerReached),
+      baseInputs.costPerChildTreated * (1 + config.costPerReached)
+    ),
+    infectionPrevalence: sampleTruncatedNormal(
+      baseInputs.infectionPrevalence,
+      baseInputs.infectionPrevalence * config.adjustments,
+      0.1,
+      0.8
+    ),
+    incomeEffect: sampleTruncatedNormal(
+      baseInputs.incomeEffect,
+      baseInputs.incomeEffect * config.interventionEffect,
+      0.05,
+      0.25
+    ),
+    wormBurdenAdjustment: sampleTruncatedNormal(
+      baseInputs.wormBurdenAdjustment,
+      baseInputs.wormBurdenAdjustment * config.adjustments,
+      0.1,
+      0.8
+    ),
+    evidenceAdjustment: sampleTruncatedNormal(
+      baseInputs.evidenceAdjustment,
+      baseInputs.evidenceAdjustment * config.adjustments,
+      0.2,
+      0.9
+    ),
+  };
+}
+
+/**
  * Run Monte Carlo simulation for a charity's cost-effectiveness
  */
 export function runCharityMonteCarlo(
@@ -277,6 +319,11 @@ export function runCharityMonteCarlo(
           type: "givedirectly",
           inputs: sampleGDInputs(charityInputs.inputs, config),
         };
+      case "deworming":
+        return {
+          type: "deworming",
+          inputs: sampleDWInputs(charityInputs.inputs, config),
+        };
     }
   };
 
@@ -296,6 +343,7 @@ export interface AllCharitiesMonteCarloResults {
   "helen-keller": MonteCarloResults;
   "new-incentives": MonteCarloResults;
   givedirectly: MonteCarloResults;
+  deworming: MonteCarloResults;
 }
 
 /**
@@ -325,6 +373,11 @@ export function runAllCharitiesMonteCarlo(
     ),
     givedirectly: runCharityMonteCarlo(
       allInputs.givedirectly,
+      numSimulations,
+      config
+    ),
+    deworming: runCharityMonteCarlo(
+      allInputs.deworming,
       numSimulations,
       config
     ),

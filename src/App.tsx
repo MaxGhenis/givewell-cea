@@ -13,6 +13,7 @@ import {
   DEFAULT_HK_INPUTS,
   DEFAULT_NI_INPUTS,
   DEFAULT_GD_INPUTS,
+  DEFAULT_DW_INPUTS,
   DEFAULT_MORAL_WEIGHTS,
   MORAL_WEIGHT_PRESETS,
 } from "./lib/models";
@@ -21,6 +22,7 @@ import type { MalariaConsortiumInputs } from "./lib/models/malaria-consortium";
 import type { HelenKellerInputs } from "./lib/models/helen-keller";
 import type { NewIncentivesInputs } from "./lib/models/new-incentives";
 import type { GiveDirectlyInputs } from "./lib/models/givedirectly";
+import type { DewormingInputs } from "./lib/models/deworming";
 import {
   runCharityMonteCarlo,
   type MonteCarloResults,
@@ -623,6 +625,113 @@ function GDParams({ inputs, onChange }: { inputs: GiveDirectlyInputs; onChange: 
   );
 }
 
+function DWParams({ inputs, onChange }: { inputs: DewormingInputs; onChange: (key: keyof DewormingInputs, value: number) => void }) {
+  return (
+    <>
+      <div className="params-section">
+        <h4>Program Parameters</h4>
+        <div className="param-grid">
+          <InputField
+            label="Grant size"
+            value={inputs.grantSize}
+            onChange={(v) => onChange("grantSize", v)}
+            min={100000}
+            max={10000000}
+            step={100000}
+            format="currency"
+          />
+          <InputField
+            label="Cost per child treated"
+            value={inputs.costPerChildTreated}
+            onChange={(v) => onChange("costPerChildTreated", v)}
+            min={0.2}
+            max={2}
+            step={0.05}
+            format="currency"
+          />
+          <InputField
+            label="Infection prevalence"
+            value={inputs.infectionPrevalence}
+            onChange={(v) => onChange("infectionPrevalence", v)}
+            min={0.1}
+            max={0.8}
+            step={0.05}
+            format="percent"
+          />
+          <InputField
+            label="Income effect"
+            value={inputs.incomeEffect}
+            onChange={(v) => onChange("incomeEffect", v)}
+            min={0.05}
+            max={0.25}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Benefit duration (years)"
+            value={inputs.benefitDurationYears}
+            onChange={(v) => onChange("benefitDurationYears", v)}
+            min={10}
+            max={50}
+            step={5}
+            format="number"
+          />
+        </div>
+      </div>
+      <div className="params-section">
+        <h4>Adjustment Factors</h4>
+        <div className="param-grid">
+          <InputField
+            label="Worm burden adj."
+            value={inputs.wormBurdenAdjustment}
+            onChange={(v) => onChange("wormBurdenAdjustment", v)}
+            min={0.1}
+            max={1}
+            step={0.05}
+            format="percent"
+          />
+          <InputField
+            label="Program adj."
+            value={inputs.programAdjustment}
+            onChange={(v) => onChange("programAdjustment", v)}
+            min={0.3}
+            max={1}
+            step={0.05}
+            format="percent"
+          />
+          <InputField
+            label="Evidence adj."
+            value={inputs.evidenceAdjustment}
+            onChange={(v) => onChange("evidenceAdjustment", v)}
+            min={0.2}
+            max={1}
+            step={0.05}
+            format="percent"
+          />
+          <InputField
+            label="Benefit decay rate"
+            value={inputs.benefitDecayRate}
+            onChange={(v) => onChange("benefitDecayRate", v)}
+            min={0}
+            max={0.2}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Discount rate"
+            value={inputs.discountRate}
+            onChange={(v) => onChange("discountRate", v)}
+            min={0.01}
+            max={0.1}
+            step={0.01}
+            format="percent"
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
 interface MoralWeightsPanelProps {
   weights: MoralWeights;
   onChange: (weights: MoralWeights) => void;
@@ -784,6 +893,12 @@ function CharityCard({
     }
   }, [charityInputs, onInputChange]);
 
+  const handleDWChange = useCallback((key: keyof DewormingInputs, value: number) => {
+    if (charityInputs.type === "deworming") {
+      onInputChange({ type: "deworming", inputs: { ...charityInputs.inputs, [key]: value } });
+    }
+  }, [charityInputs, onInputChange]);
+
   return (
     <div className="charity-card">
       <div className="charity-header" style={{ borderLeftColor: config.color }}>
@@ -885,6 +1000,9 @@ function CharityCard({
           {charityInputs.type === "givedirectly" && (
             <GDParams inputs={charityInputs.inputs} onChange={handleGDChange} />
           )}
+          {charityInputs.type === "deworming" && (
+            <DWParams inputs={charityInputs.inputs} onChange={handleDWChange} />
+          )}
         </div>
       )}
     </div>
@@ -938,6 +1056,7 @@ function App() {
       "helen-keller": { type: "helen-keller", inputs: { ...DEFAULT_HK_INPUTS } },
       "new-incentives": { type: "new-incentives", inputs: { ...DEFAULT_NI_INPUTS } },
       "givedirectly": { type: "givedirectly", inputs: { ...DEFAULT_GD_INPUTS } },
+      "deworming": { type: "deworming", inputs: { ...DEFAULT_DW_INPUTS } },
     });
     setMoralWeights({ ...DEFAULT_MORAL_WEIGHTS });
   }, []);
