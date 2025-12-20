@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   CHARITY_CONFIGS,
   calculateCharity,
@@ -6,7 +6,15 @@ import {
   type CharityInputs,
   type CharityType,
   type UnifiedResults,
+  DEFAULT_AMF_INPUTS,
+  DEFAULT_MC_INPUTS,
+  DEFAULT_HK_INPUTS,
+  DEFAULT_NI_INPUTS,
 } from "./lib/models";
+import type { AMFInputs } from "./lib/models/amf";
+import type { MalariaConsortiumInputs } from "./lib/models/malaria-consortium";
+import type { HelenKellerInputs } from "./lib/models/helen-keller";
+import type { NewIncentivesInputs } from "./lib/models/new-incentives";
 import "./App.css";
 
 function formatNumber(n: number, decimals = 1): string {
@@ -19,33 +27,562 @@ function formatCurrency(n: number): string {
   return `$${formatNumber(n, 0)}`;
 }
 
+interface InputFieldProps {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step: number;
+  format: "currency" | "percent" | "decimal" | "number";
+}
+
+function InputField({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  step,
+  format,
+}: InputFieldProps) {
+  const displayValue = () => {
+    switch (format) {
+      case "currency":
+        return value >= 1000 ? `$${formatNumber(value, 0)}` : `$${value.toFixed(2)}`;
+      case "percent":
+        return `${(value * 100).toFixed(2)}%`;
+      case "decimal":
+        return value.toFixed(3);
+      case "number":
+        return value.toFixed(0);
+    }
+  };
+
+  return (
+    <div className="input-field">
+      <label>{label}</label>
+      <div className="input-row">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+        />
+        <span className="input-value">{displayValue()}</span>
+      </div>
+    </div>
+  );
+}
+
+// Parameter configurations for each charity type
+function AMFParams({ inputs, onChange }: { inputs: AMFInputs; onChange: (key: keyof AMFInputs, value: number) => void }) {
+  return (
+    <>
+      <div className="params-section">
+        <h4>Program Parameters</h4>
+        <div className="param-grid">
+          <InputField
+            label="Grant size"
+            value={inputs.grantSize}
+            onChange={(v) => onChange("grantSize", v)}
+            min={100000}
+            max={10000000}
+            step={100000}
+            format="currency"
+          />
+          <InputField
+            label="Cost per child reached"
+            value={inputs.costPerUnder5Reached}
+            onChange={(v) => onChange("costPerUnder5Reached", v)}
+            min={1}
+            max={50}
+            step={0.5}
+            format="currency"
+          />
+          <InputField
+            label="Years of coverage"
+            value={inputs.yearsEffectiveCoverage}
+            onChange={(v) => onChange("yearsEffectiveCoverage", v)}
+            min={0.5}
+            max={5}
+            step={0.1}
+            format="decimal"
+          />
+          <InputField
+            label="Malaria mortality rate"
+            value={inputs.malariaMortalityRate}
+            onChange={(v) => onChange("malariaMortalityRate", v)}
+            min={0.0001}
+            max={0.01}
+            step={0.0001}
+            format="percent"
+          />
+          <InputField
+            label="ITN effect on deaths"
+            value={inputs.itnEffectOnDeaths}
+            onChange={(v) => onChange("itnEffectOnDeaths", v)}
+            min={0.05}
+            max={0.8}
+            step={0.01}
+            format="percent"
+          />
+        </div>
+      </div>
+      <div className="params-section">
+        <h4>Adjustment Factors</h4>
+        <div className="param-grid">
+          <InputField
+            label="Older mortalities adj."
+            value={inputs.adjustmentOlderMortalities}
+            onChange={(v) => onChange("adjustmentOlderMortalities", v)}
+            min={0}
+            max={1}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Developmental adj."
+            value={inputs.adjustmentDevelopmental}
+            onChange={(v) => onChange("adjustmentDevelopmental", v)}
+            min={0}
+            max={1}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Program benefits adj."
+            value={inputs.adjustmentProgramBenefits}
+            onChange={(v) => onChange("adjustmentProgramBenefits", v)}
+            min={-0.5}
+            max={1}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Leverage adj."
+            value={inputs.adjustmentLeverage}
+            onChange={(v) => onChange("adjustmentLeverage", v)}
+            min={-0.5}
+            max={0.5}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Funging adj."
+            value={inputs.adjustmentFunging}
+            onChange={(v) => onChange("adjustmentFunging", v)}
+            min={-0.5}
+            max={0}
+            step={0.01}
+            format="percent"
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function MCParams({ inputs, onChange }: { inputs: MalariaConsortiumInputs; onChange: (key: keyof MalariaConsortiumInputs, value: number) => void }) {
+  return (
+    <>
+      <div className="params-section">
+        <h4>Program Parameters</h4>
+        <div className="param-grid">
+          <InputField
+            label="Grant size"
+            value={inputs.grantSize}
+            onChange={(v) => onChange("grantSize", v)}
+            min={100000}
+            max={10000000}
+            step={100000}
+            format="currency"
+          />
+          <InputField
+            label="Cost per child reached"
+            value={inputs.costPerChildReached}
+            onChange={(v) => onChange("costPerChildReached", v)}
+            min={1}
+            max={20}
+            step={0.5}
+            format="currency"
+          />
+          <InputField
+            label="Malaria mortality rate"
+            value={inputs.malariaMortalityRate}
+            onChange={(v) => onChange("malariaMortalityRate", v)}
+            min={0.001}
+            max={0.02}
+            step={0.0005}
+            format="percent"
+          />
+          <InputField
+            label="Mortality during season"
+            value={inputs.proportionMortalityDuringSeason}
+            onChange={(v) => onChange("proportionMortalityDuringSeason", v)}
+            min={0.3}
+            max={1}
+            step={0.05}
+            format="percent"
+          />
+          <InputField
+            label="SMC effect on deaths"
+            value={inputs.smcEffect}
+            onChange={(v) => onChange("smcEffect", v)}
+            min={0.3}
+            max={1}
+            step={0.01}
+            format="percent"
+          />
+        </div>
+      </div>
+      <div className="params-section">
+        <h4>Adjustment Factors</h4>
+        <div className="param-grid">
+          <InputField
+            label="Older mortalities adj."
+            value={inputs.adjustmentOlderMortalities}
+            onChange={(v) => onChange("adjustmentOlderMortalities", v)}
+            min={0}
+            max={0.5}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Developmental adj."
+            value={inputs.adjustmentDevelopmental}
+            onChange={(v) => onChange("adjustmentDevelopmental", v)}
+            min={0}
+            max={0.8}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Program benefits adj."
+            value={inputs.adjustmentProgramBenefits}
+            onChange={(v) => onChange("adjustmentProgramBenefits", v)}
+            min={0}
+            max={0.5}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Leverage adj."
+            value={inputs.adjustmentLeverage}
+            onChange={(v) => onChange("adjustmentLeverage", v)}
+            min={-0.1}
+            max={0.1}
+            step={0.005}
+            format="percent"
+          />
+          <InputField
+            label="Funging adj."
+            value={inputs.adjustmentFunging}
+            onChange={(v) => onChange("adjustmentFunging", v)}
+            min={-0.5}
+            max={0}
+            step={0.01}
+            format="percent"
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function HKParams({ inputs, onChange }: { inputs: HelenKellerInputs; onChange: (key: keyof HelenKellerInputs, value: number) => void }) {
+  return (
+    <>
+      <div className="params-section">
+        <h4>Program Parameters</h4>
+        <div className="param-grid">
+          <InputField
+            label="Grant size"
+            value={inputs.grantSize}
+            onChange={(v) => onChange("grantSize", v)}
+            min={100000}
+            max={10000000}
+            step={100000}
+            format="currency"
+          />
+          <InputField
+            label="Cost per child reached"
+            value={inputs.costPerPersonUnder5}
+            onChange={(v) => onChange("costPerPersonUnder5", v)}
+            min={0.5}
+            max={10}
+            step={0.1}
+            format="currency"
+          />
+          <InputField
+            label="Counterfactual coverage"
+            value={inputs.proportionReachedCounterfactual}
+            onChange={(v) => onChange("proportionReachedCounterfactual", v)}
+            min={0}
+            max={0.8}
+            step={0.05}
+            format="percent"
+          />
+          <InputField
+            label="Under-5 mortality rate"
+            value={inputs.mortalityRateUnder5}
+            onChange={(v) => onChange("mortalityRateUnder5", v)}
+            min={0.001}
+            max={0.02}
+            step={0.0005}
+            format="percent"
+          />
+          <InputField
+            label="VAS effect on mortality"
+            value={inputs.vasEffect}
+            onChange={(v) => onChange("vasEffect", v)}
+            min={0.02}
+            max={0.2}
+            step={0.01}
+            format="percent"
+          />
+        </div>
+      </div>
+      <div className="params-section">
+        <h4>Adjustment Factors</h4>
+        <div className="param-grid">
+          <InputField
+            label="Developmental adj."
+            value={inputs.adjustmentDevelopmental}
+            onChange={(v) => onChange("adjustmentDevelopmental", v)}
+            min={0}
+            max={0.5}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Program benefits adj."
+            value={inputs.adjustmentProgramBenefits}
+            onChange={(v) => onChange("adjustmentProgramBenefits", v)}
+            min={0}
+            max={1}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Grantee adj."
+            value={inputs.adjustmentGrantee}
+            onChange={(v) => onChange("adjustmentGrantee", v)}
+            min={-0.3}
+            max={0.1}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Leverage adj."
+            value={inputs.adjustmentLeverage}
+            onChange={(v) => onChange("adjustmentLeverage", v)}
+            min={-0.2}
+            max={0.1}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Funging adj."
+            value={inputs.adjustmentFunging}
+            onChange={(v) => onChange("adjustmentFunging", v)}
+            min={-0.6}
+            max={0}
+            step={0.01}
+            format="percent"
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function NIParams({ inputs, onChange }: { inputs: NewIncentivesInputs; onChange: (key: keyof NewIncentivesInputs, value: number) => void }) {
+  return (
+    <>
+      <div className="params-section">
+        <h4>Program Parameters</h4>
+        <div className="param-grid">
+          <InputField
+            label="Grant size"
+            value={inputs.grantSize}
+            onChange={(v) => onChange("grantSize", v)}
+            min={100000}
+            max={10000000}
+            step={100000}
+            format="currency"
+          />
+          <InputField
+            label="Cost per child reached"
+            value={inputs.costPerChildReached}
+            onChange={(v) => onChange("costPerChildReached", v)}
+            min={5}
+            max={50}
+            step={1}
+            format="currency"
+          />
+          <InputField
+            label="Counterfactual vaccination"
+            value={inputs.proportionReachedCounterfactual}
+            onChange={(v) => onChange("proportionReachedCounterfactual", v)}
+            min={0.5}
+            max={0.95}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Death prob. unvaccinated"
+            value={inputs.probabilityDeathUnvaccinated}
+            onChange={(v) => onChange("probabilityDeathUnvaccinated", v)}
+            min={0.01}
+            max={0.1}
+            step={0.005}
+            format="percent"
+          />
+          <InputField
+            label="Vaccine effect"
+            value={inputs.vaccineEffect}
+            onChange={(v) => onChange("vaccineEffect", v)}
+            min={0.3}
+            max={0.8}
+            step={0.01}
+            format="percent"
+          />
+        </div>
+      </div>
+      <div className="params-section">
+        <h4>Adjustment Factors</h4>
+        <div className="param-grid">
+          <InputField
+            label="Older mortalities adj."
+            value={inputs.adjustmentOlderMortalities}
+            onChange={(v) => onChange("adjustmentOlderMortalities", v)}
+            min={0}
+            max={0.4}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Developmental adj."
+            value={inputs.adjustmentDevelopmental}
+            onChange={(v) => onChange("adjustmentDevelopmental", v)}
+            min={0}
+            max={0.5}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Consumption adj."
+            value={inputs.adjustmentConsumption}
+            onChange={(v) => onChange("adjustmentConsumption", v)}
+            min={0}
+            max={0.2}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Program benefits adj."
+            value={inputs.adjustmentProgramBenefits}
+            onChange={(v) => onChange("adjustmentProgramBenefits", v)}
+            min={0}
+            max={1}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Leverage adj."
+            value={inputs.adjustmentLeverage}
+            onChange={(v) => onChange("adjustmentLeverage", v)}
+            min={-0.2}
+            max={0.1}
+            step={0.01}
+            format="percent"
+          />
+          <InputField
+            label="Funging adj."
+            value={inputs.adjustmentFunging}
+            onChange={(v) => onChange("adjustmentFunging", v)}
+            min={-0.2}
+            max={0}
+            step={0.01}
+            format="percent"
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
 interface CharityCardProps {
   config: (typeof CHARITY_CONFIGS)[number];
+  charityInputs: CharityInputs;
   results: UnifiedResults;
   isExpanded: boolean;
   onToggleExpand: () => void;
+  onInputChange: (inputs: CharityInputs) => void;
   maxXBenchmark: number;
 }
 
 function CharityCard({
   config,
+  charityInputs,
   results,
   isExpanded,
   onToggleExpand,
+  onInputChange,
   maxXBenchmark,
 }: CharityCardProps) {
   const barWidth = (results.finalXBenchmark / maxXBenchmark) * 100;
+
+  const handleAMFChange = useCallback((key: keyof AMFInputs, value: number) => {
+    if (charityInputs.type === "amf") {
+      onInputChange({ type: "amf", inputs: { ...charityInputs.inputs, [key]: value } });
+    }
+  }, [charityInputs, onInputChange]);
+
+  const handleMCChange = useCallback((key: keyof MalariaConsortiumInputs, value: number) => {
+    if (charityInputs.type === "malaria-consortium") {
+      onInputChange({ type: "malaria-consortium", inputs: { ...charityInputs.inputs, [key]: value } });
+    }
+  }, [charityInputs, onInputChange]);
+
+  const handleHKChange = useCallback((key: keyof HelenKellerInputs, value: number) => {
+    if (charityInputs.type === "helen-keller") {
+      onInputChange({ type: "helen-keller", inputs: { ...charityInputs.inputs, [key]: value } });
+    }
+  }, [charityInputs, onInputChange]);
+
+  const handleNIChange = useCallback((key: keyof NewIncentivesInputs, value: number) => {
+    if (charityInputs.type === "new-incentives") {
+      onInputChange({ type: "new-incentives", inputs: { ...charityInputs.inputs, [key]: value } });
+    }
+  }, [charityInputs, onInputChange]);
 
   return (
     <div className="charity-card">
       <div className="charity-header" style={{ borderLeftColor: config.color }}>
         <div className="charity-title">
-          <span
-            className="charity-abbrev"
-            style={{ backgroundColor: config.color }}
-          >
-            {config.abbrev}
-          </span>
+          <div className="charity-logo-container">
+            <img
+              src={config.logoUrl}
+              alt={`${config.name} logo`}
+              className="charity-logo"
+              onError={(e) => {
+                // Fallback to abbreviation if logo fails to load
+                e.currentTarget.style.display = "none";
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = "flex";
+              }}
+            />
+            <span
+              className="charity-abbrev"
+              style={{ backgroundColor: config.color, display: "none" }}
+            >
+              {config.abbrev}
+            </span>
+          </div>
           <h3>{config.name}</h3>
         </div>
         <button className="expand-btn" onClick={onToggleExpand}>
@@ -91,31 +628,21 @@ function CharityCard({
       </div>
 
       {isExpanded && (
-        <div className="charity-params">
+        <div className="charity-params" onClick={(e) => e.stopPropagation()}>
           <p className="param-description">{config.description}</p>
-          <div className="param-details">
-            <div className="param-row">
-              <span className="param-label">Initial CE:</span>
-              <span className="param-value">
-                {results.initialXBenchmark.toFixed(2)}×
-              </span>
-            </div>
-            <div className="param-row">
-              <span className="param-label">Final CE:</span>
-              <span className="param-value">
-                {results.finalXBenchmark.toFixed(2)}×
-              </span>
-            </div>
-            <div className="param-row">
-              <span className="param-label">Adjustment factor:</span>
-              <span className="param-value">
-                {(results.finalXBenchmark / results.initialXBenchmark).toFixed(
-                  2
-                )}
-                ×
-              </span>
-            </div>
-          </div>
+
+          {charityInputs.type === "amf" && (
+            <AMFParams inputs={charityInputs.inputs} onChange={handleAMFChange} />
+          )}
+          {charityInputs.type === "malaria-consortium" && (
+            <MCParams inputs={charityInputs.inputs} onChange={handleMCChange} />
+          )}
+          {charityInputs.type === "helen-keller" && (
+            <HKParams inputs={charityInputs.inputs} onChange={handleHKChange} />
+          )}
+          {charityInputs.type === "new-incentives" && (
+            <NIParams inputs={charityInputs.inputs} onChange={handleNIChange} />
+          )}
         </div>
       )}
     </div>
@@ -123,18 +650,32 @@ function CharityCard({
 }
 
 function App() {
-  const [expandedCharity, setExpandedCharity] = useState<CharityType | null>(
-    null
-  );
+  const [expandedCharity, setExpandedCharity] = useState<CharityType | null>(null);
 
   // Initialize all charity inputs with defaults
-  const [charityInputs] = useState<Record<CharityType, CharityInputs>>(() => {
+  const [charityInputs, setCharityInputs] = useState<Record<CharityType, CharityInputs>>(() => {
     const inputs: Partial<Record<CharityType, CharityInputs>> = {};
     for (const config of CHARITY_CONFIGS) {
       inputs[config.type] = getDefaultInputs(config.type);
     }
     return inputs as Record<CharityType, CharityInputs>;
   });
+
+  const handleInputChange = useCallback((type: CharityType, inputs: CharityInputs) => {
+    setCharityInputs(prev => ({
+      ...prev,
+      [type]: inputs,
+    }));
+  }, []);
+
+  const resetToDefaults = useCallback(() => {
+    setCharityInputs({
+      "amf": { type: "amf", inputs: { ...DEFAULT_AMF_INPUTS } },
+      "malaria-consortium": { type: "malaria-consortium", inputs: { ...DEFAULT_MC_INPUTS } },
+      "helen-keller": { type: "helen-keller", inputs: { ...DEFAULT_HK_INPUTS } },
+      "new-incentives": { type: "new-incentives", inputs: { ...DEFAULT_NI_INPUTS } },
+    });
+  }, []);
 
   // Calculate results for all charities
   const charityResults = useMemo(() => {
@@ -175,12 +716,15 @@ function App() {
           <h1>GiveWell CEA Calculator</h1>
           <p className="subtitle">
             An open-source implementation of GiveWell's cost-effectiveness
-            analysis for top charities. Compare how each charity performs
-            relative to unconditional cash transfers.
+            analysis for top charities. Adjust parameters to explore how
+            different assumptions affect relative effectiveness.
           </p>
         </div>
         <div className="header-meta">
           <span className="version">November 2025 Model</span>
+          <button className="reset-btn" onClick={resetToDefaults}>
+            Reset to defaults
+          </button>
         </div>
       </header>
 
@@ -190,8 +734,7 @@ function App() {
             <h2>Top Charities Comparison</h2>
             <p>
               Cost-effectiveness expressed as multiples of GiveWell's benchmark
-              (unconditional cash transfers). A value of 10× means $1 donated
-              creates 10× the value of $1 in cash.
+              (unconditional cash transfers). Click + to expand and adjust parameters.
             </p>
           </div>
 
@@ -200,6 +743,7 @@ function App() {
               <CharityCard
                 key={config.type}
                 config={config}
+                charityInputs={charityInputs[config.type]}
                 results={charityResults[config.type]}
                 isExpanded={expandedCharity === config.type}
                 onToggleExpand={() =>
@@ -207,6 +751,7 @@ function App() {
                     expandedCharity === config.type ? null : config.type
                   )
                 }
+                onInputChange={(inputs) => handleInputChange(config.type, inputs)}
                 maxXBenchmark={maxXBenchmark}
               />
             ))}
@@ -259,25 +804,24 @@ function App() {
               This calculator replicates GiveWell's cost-effectiveness analysis
               methodology for their top 4 charities as of November 2025:
             </p>
-            <ul>
-              <li>
-                <strong>AMF</strong>: Insecticide-treated bed nets
-              </li>
-              <li>
-                <strong>Malaria Consortium</strong>: Seasonal malaria
-                chemoprevention
-              </li>
-              <li>
-                <strong>Helen Keller</strong>: Vitamin A supplementation
-              </li>
-              <li>
-                <strong>New Incentives</strong>: Vaccination incentives
-              </li>
+            <ul className="charity-list">
+              {CHARITY_CONFIGS.map((config) => (
+                <li key={config.type} className="charity-list-item">
+                  <img
+                    src={config.logoUrl}
+                    alt={`${config.abbrev} logo`}
+                    className="charity-list-logo"
+                  />
+                  <span>
+                    <strong>{config.abbrev}</strong>: {config.description}
+                  </span>
+                </li>
+              ))}
             </ul>
             <p>
               Each charity uses a different calculation model with unique
-              parameters and adjustment factors validated against GiveWell's
-              published spreadsheets.
+              parameters validated against GiveWell's published spreadsheets
+              with 75+ tests.
             </p>
             <a
               href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness"

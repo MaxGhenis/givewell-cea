@@ -49,6 +49,7 @@ export interface CharityConfig {
   type: CharityType;
   color: string;
   description: string;
+  logoUrl: string;
 }
 
 export const CHARITY_CONFIGS: CharityConfig[] = [
@@ -58,6 +59,7 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "amf",
     color: "#0D5C63",
     description: "Distributes insecticide-treated bed nets to prevent malaria",
+    logoUrl: "https://www.againstmalaria.com/downloads/AMF_logo_medium.png",
   },
   {
     name: "Malaria Consortium",
@@ -65,6 +67,7 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "malaria-consortium",
     color: "#1B7F79",
     description: "Provides seasonal malaria chemoprevention to children",
+    logoUrl: "https://cdn.brandfetch.io/idvLJJdkC2/theme/dark/logo.svg",
   },
   {
     name: "Helen Keller International",
@@ -72,6 +75,7 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "helen-keller",
     color: "#2A9D8F",
     description: "Delivers vitamin A supplementation to prevent child mortality",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Helen_Keller_International_logo.svg",
   },
   {
     name: "New Incentives",
@@ -79,6 +83,7 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "new-incentives",
     color: "#48B89F",
     description: "Uses cash incentives to increase childhood vaccination rates",
+    logoUrl: "https://cdn.prod.website-files.com/5f7c51bf9fac9b5ed62aa37b/5f7c51bf9fac9b49b12aa3f0_Group%20345.svg",
   },
 ];
 
