@@ -749,13 +749,13 @@ function CharityCard({
             <span className="metric-value-sm">
               {results.deathsAvertedUnder5.toFixed(0)}
             </span>
-            <span className="metric-label-sm">deaths averted</span>
+            <span className="metric-label-sm">deaths averted per $1M</span>
           </div>
           <div className="metric">
             <span className="metric-value-sm">
               {formatNumber(results.peopleReached, 0)}
             </span>
-            <span className="metric-label-sm">children reached</span>
+            <span className="metric-label-sm">children reached per $1M</span>
           </div>
         </div>
       </div>
