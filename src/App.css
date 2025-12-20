@@ -309,18 +309,73 @@ body {
   letter-spacing: 0.05em;
 }
 
+.uncertainty-range {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-top: var(--space-xs);
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
 .metric-bar-container {
   height: 8px;
   background: var(--color-bg-warm);
   border-radius: 4px;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: var(--space-lg);
+  position: relative;
+}
+
+.uncertainty-bar {
+  position: absolute;
+  height: 100%;
+  border-radius: 4px;
+  opacity: 0.25;
+  top: 0;
 }
 
 .metric-bar {
   height: 100%;
   border-radius: 4px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+/* Uncertainty toggle */
+.uncertainty-toggle {
+  margin-top: var(--space-md);
+}
+
+.toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.toggle-text {
+  font-weight: 500;
+}
+
+.loading-indicator {
+  color: var(--color-accent);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .metrics-grid {
