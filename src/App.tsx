@@ -962,13 +962,13 @@ function CharityCard({
         <div className="metrics-grid">
           <div className="metric">
             <span className="metric-value-sm">
-              {formatCurrency(results.costPerDeathAverted)}
+              {results.costPerDeathAverted === Infinity ? "N/A" : formatCurrency(results.costPerDeathAverted)}
             </span>
             <span className="metric-label-sm">cost per death averted</span>
           </div>
           <div className="metric">
             <span className="metric-value-sm">
-              {results.deathsAvertedUnder5.toFixed(0)}
+              {results.deathsAvertedUnder5 === 0 ? "N/A" : results.deathsAvertedUnder5.toFixed(0)}
             </span>
             <span className="metric-label-sm">deaths averted per $1M</span>
           </div>
@@ -1211,9 +1211,9 @@ function App() {
                 <span className="stat-value">
                   {formatCurrency(
                     Math.min(
-                      ...Object.values(charityResults).map(
-                        (r) => r.costPerDeathAverted
-                      )
+                      ...Object.values(charityResults)
+                        .map((r) => r.costPerDeathAverted)
+                        .filter((c) => c !== Infinity)
                     )
                   )}
                 </span>
