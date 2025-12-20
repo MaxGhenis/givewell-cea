@@ -530,7 +530,7 @@ interface MoralWeightsPanelProps {
 }
 
 function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProps) {
-  const [selectedPreset, setSelectedPreset] = useState<string>("custom");
+  const [selectedPreset, setSelectedPreset] = useState<string>("GiveWell Default");
 
   const handlePresetChange = (presetName: string) => {
     setSelectedPreset(presetName);
@@ -615,7 +615,10 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
         </div>
       </div>
 
-      <button className="reset-weights-btn" onClick={onReset}>
+      <button className="reset-weights-btn" onClick={() => {
+        setSelectedPreset("GiveWell Default");
+        onReset();
+      }}>
         Reset to GiveWell defaults
       </button>
     </div>
