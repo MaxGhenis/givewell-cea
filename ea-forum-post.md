@@ -56,18 +56,39 @@ Each test case uses actual values from GiveWell's published spreadsheets across 
 
 - **Frontend**: React + TypeScript + Vite
 - **Styling**: Tailwind CSS with custom editorial design
-- **Testing**: Vitest with 75+ passing tests
+- **Testing**: Vitest with 108 passing tests
 - **CI/CD**: GitHub Actions
 - **Deployment**: GitHub Pages
 
+## Features
+
+### Interactive Parameter Editing
+Expand any charity card to adjust program parameters and adjustment factors:
+- Cost per person reached
+- Mortality rates and intervention effects
+- Years of coverage (for bed nets)
+- Developmental, leverage, and funging adjustments
+
+### Moral Weights Customization
+The sidebar includes a Moral Weights panel where you can:
+- Choose from presets: GiveWell Default, Equal Value, Child-Focused, Low Discount Rate
+- Adjust weights for different age groups with sliders
+- See how different ethical frameworks affect relative cost-effectiveness
+
+### Uncertainty Analysis (Monte Carlo)
+Toggle "Show uncertainty (90% CI)" to run Monte Carlo simulations:
+- 500 simulations per charity with realistic parameter uncertainty
+- See 90% confidence intervals for cost-effectiveness estimates
+- Visual uncertainty bars show the range of likely values
+- Helps understand which charities have more/less certain estimates
+
 ## Roadmap
 
-Future features I'm considering:
+Features I'm considering for the future:
 
-1. **Interactive parameter editing**: Allow users to adjust inputs and see real-time recalculation
-2. **Moral weights customization**: Let users apply their own moral weights for different age groups
-3. **Uncertainty analysis**: Monte Carlo simulation to show confidence intervals
-4. **Historical comparison**: Compare cost-effectiveness across GiveWell's analysis versions
+1. **Historical comparison**: Compare cost-effectiveness across GiveWell's analysis versions
+2. **Additional charities**: Add more GiveWell-evaluated interventions
+3. **Export/share**: Save and share custom parameter configurations
 
 ## Contributions Welcome
 
