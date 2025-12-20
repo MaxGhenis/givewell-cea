@@ -27,6 +27,7 @@ import {
   runCharityMonteCarlo,
   type MonteCarloResults,
 } from "./lib/uncertainty-charity";
+import { CalculationBreakdown } from "./components/CalculationBreakdown";
 import "./App.css";
 
 function formatNumber(n: number, decimals = 1): string {
@@ -855,6 +856,8 @@ function CharityCard({
   onInputChange,
   maxXBenchmark,
 }: CharityCardProps) {
+  const [viewMode, setViewMode] = useState<"params" | "calculations">("calculations");
+
   const barWidth = (results.finalXBenchmark / maxXBenchmark) * 100;
   const uncertaintyBarLow = uncertainty
     ? (uncertainty.percentile10 / maxXBenchmark) * 100
@@ -985,23 +988,46 @@ function CharityCard({
         <div className="charity-params" onClick={(e) => e.stopPropagation()}>
           <p className="param-description">{config.description}</p>
 
-          {charityInputs.type === "amf" && (
-            <AMFParams inputs={charityInputs.inputs} onChange={handleAMFChange} />
+          <div className="view-toggle">
+            <button
+              className={`view-toggle-btn ${viewMode === "calculations" ? "active" : ""}`}
+              onClick={() => setViewMode("calculations")}
+            >
+              Calculations
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === "params" ? "active" : ""}`}
+              onClick={() => setViewMode("params")}
+            >
+              Edit Parameters
+            </button>
+          </div>
+
+          {viewMode === "calculations" && (
+            <CalculationBreakdown charityInputs={charityInputs} results={results} />
           )}
-          {charityInputs.type === "malaria-consortium" && (
-            <MCParams inputs={charityInputs.inputs} onChange={handleMCChange} />
-          )}
-          {charityInputs.type === "helen-keller" && (
-            <HKParams inputs={charityInputs.inputs} onChange={handleHKChange} />
-          )}
-          {charityInputs.type === "new-incentives" && (
-            <NIParams inputs={charityInputs.inputs} onChange={handleNIChange} />
-          )}
-          {charityInputs.type === "givedirectly" && (
-            <GDParams inputs={charityInputs.inputs} onChange={handleGDChange} />
-          )}
-          {charityInputs.type === "deworming" && (
-            <DWParams inputs={charityInputs.inputs} onChange={handleDWChange} />
+
+          {viewMode === "params" && (
+            <>
+              {charityInputs.type === "amf" && (
+                <AMFParams inputs={charityInputs.inputs} onChange={handleAMFChange} />
+              )}
+              {charityInputs.type === "malaria-consortium" && (
+                <MCParams inputs={charityInputs.inputs} onChange={handleMCChange} />
+              )}
+              {charityInputs.type === "helen-keller" && (
+                <HKParams inputs={charityInputs.inputs} onChange={handleHKChange} />
+              )}
+              {charityInputs.type === "new-incentives" && (
+                <NIParams inputs={charityInputs.inputs} onChange={handleNIChange} />
+              )}
+              {charityInputs.type === "givedirectly" && (
+                <GDParams inputs={charityInputs.inputs} onChange={handleGDChange} />
+              )}
+              {charityInputs.type === "deworming" && (
+                <DWParams inputs={charityInputs.inputs} onChange={handleDWChange} />
+              )}
+            </>
           )}
         </div>
       )}
@@ -1130,6 +1156,11 @@ function App() {
   return (
     <div className="app">
       <div className="grain-overlay" />
+
+      <div className="disclaimer-banner">
+        Independent tool by <a href="https://github.com/MaxGhenis">Max Ghenis</a> — not affiliated with GiveWell.
+        See <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">GiveWell's official CEA spreadsheet</a>.
+      </div>
 
       <header className="header">
         <div className="header-content">
@@ -1281,10 +1312,16 @@ function App() {
           Built by{" "}
           <a href="https://github.com/MaxGhenis">Max Ghenis</a> (not affiliated with GiveWell).{" "}
           Data from{" "}
-          <a href="https://www.givewell.org">GiveWell</a>'s November 2025 CEA.
+          <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">
+            GiveWell's November 2025 CEA
+          </a>.
           <br />
           <a href="https://github.com/MaxGhenis/givewell-cea-tool">
             View source on GitHub
+          </a>{" "}
+          |{" "}
+          <a href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness/cost-effectiveness-models" target="_blank" rel="noopener noreferrer">
+            GiveWell CEA methodology
           </a>
         </p>
         <p className="disclaimer">
