@@ -1012,8 +1012,9 @@ function App() {
           <div className="methodology-panel">
             <h3>About This Tool</h3>
             <p>
-              This calculator replicates GiveWell's cost-effectiveness analysis
-              methodology for their top 4 charities as of November 2025:
+              An independent, open-source calculator replicating GiveWell's
+              cost-effectiveness methodology for their top 4 charities
+              (November 2025 CEA):
             </p>
             <ul className="charity-list">
               {CHARITY_CONFIGS.map((config) => (
@@ -1048,8 +1049,9 @@ function App() {
 
       <footer className="footer">
         <p>
-          Open source project by{" "}
-          <a href="https://github.com/MaxGhenis">Max Ghenis</a>. Data from{" "}
+          Built by{" "}
+          <a href="https://github.com/MaxGhenis">Max Ghenis</a> (not affiliated with GiveWell).{" "}
+          Data from{" "}
           <a href="https://www.givewell.org">GiveWell</a>'s November 2025 CEA.
           <br />
           <a href="https://github.com/MaxGhenis/givewell-cea-tool">
@@ -1057,9 +1059,12 @@ function App() {
           </a>
         </p>
         <p className="disclaimer">
-          This is an independent implementation for educational purposes. For
-          official cost-effectiveness estimates, refer to GiveWell's published
-          analyses.
+          This is an independent, open-source tool for educational purposes—not
+          an official GiveWell product. For official cost-effectiveness
+          estimates, refer to{" "}
+          <a href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness/cost-effectiveness-models">
+            GiveWell's published analyses
+          </a>.
         </p>
       </footer>
     </div>

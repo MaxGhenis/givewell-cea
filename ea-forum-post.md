@@ -1,6 +1,6 @@
 # GiveWell CEA Calculator: An Open-Source Web Tool for Cost-Effectiveness Analysis
 
-I'm excited to share an open-source web tool that replicates GiveWell's cost-effectiveness analysis (CEA) for their top 4 recommended charities.
+I'm excited to share an open-source web tool I built that replicates GiveWell's cost-effectiveness analysis (CEA) for their top 4 recommended charities. **Note: This is an independent project—not an official GiveWell product.**
 
 **Live tool**: [maxghenis.github.io/givewell-cea-tool](https://maxghenis.github.io/givewell-cea-tool)
 
