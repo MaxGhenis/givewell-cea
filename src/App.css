@@ -223,6 +223,39 @@ body {
   gap: var(--space-sm);
 }
 
+.charity-name-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.charity-name-row h3 {
+  margin: 0;
+}
+
+.country-selector {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-warm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  width: fit-content;
+}
+
+.country-selector:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-card);
+}
+
+.country-selector:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(13, 92, 99, 0.1);
+}
+
 .charity-logo-container {
   width: 48px;
   height: 48px;
@@ -587,6 +620,63 @@ body {
   color: var(--color-text-secondary);
   margin-bottom: var(--space-md);
   line-height: 1.5;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel-header h3 {
+  margin: 0;
+  user-select: none;
+}
+
+.mode-selector,
+.preset-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.mode-selector label,
+.preset-selector label {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.mode-selector select,
+.preset-selector select {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-warm);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.mode-selector select:hover,
+.preset-selector select:hover {
+  border-color: var(--color-primary);
+}
+
+.weight-section {
+  margin-bottom: var(--space-md);
+}
+
+.weight-section h4 {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .weights-grid {

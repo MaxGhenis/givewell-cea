@@ -8,6 +8,7 @@ import {
   type CharityType,
   type UnifiedResults,
   type MoralWeights,
+  type MoralWeightMode,
   DEFAULT_AMF_INPUTS,
   DEFAULT_MC_INPUTS,
   DEFAULT_HK_INPUTS,
@@ -15,6 +16,32 @@ import {
   DEFAULT_GD_INPUTS,
   DEFAULT_DW_INPUTS,
   DEFAULT_MORAL_WEIGHTS,
+  MORAL_WEIGHT_PRESETS,
+  // Country data
+  AMF_COUNTRIES,
+  AMF_COUNTRY_NAMES,
+  MC_COUNTRIES,
+  MC_COUNTRY_NAMES,
+  HK_COUNTRIES,
+  HK_COUNTRY_NAMES,
+  NI_COUNTRIES,
+  NI_COUNTRY_NAMES,
+  GD_COUNTRIES,
+  GD_COUNTRY_NAMES,
+  DW_VARIANTS,
+  DW_VARIANT_NAMES,
+  getAMFInputsForCountry,
+  getMCInputsForCountry,
+  getHKInputsForCountry,
+  getNIInputsForCountry,
+  getGDInputsForCountry,
+  getDWInputsForVariant,
+  type AMFCountry,
+  type MCCountry,
+  type HKCountry,
+  type NICountry,
+  type GDCountry,
+  type DWVariant,
 } from "./lib/models";
 import {
   runCharityMonteCarlo,
@@ -40,84 +67,205 @@ interface MoralWeightsPanelProps {
 }
 
 function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProps) {
-  const handleWeightChange = (key: keyof MoralWeights, value: number) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const handleWeightChange = (key: keyof MoralWeights, value: number | MoralWeightMode) => {
     onChange({ ...weights, [key]: value });
+  };
+
+  const handlePresetChange = (presetName: string) => {
+    const preset = MORAL_WEIGHT_PRESETS.find(p => p.name === presetName);
+    if (preset) {
+      onChange(preset.weights);
+    }
   };
 
   return (
     <div className="moral-weights-panel">
-      <h3>Moral Weights</h3>
-      <p className="panel-description">
-        Adjust the value assigned to averting deaths at different ages.
-        Higher values mean saving that age group is considered more valuable.
-      </p>
-
-      <div className="weights-grid">
-        <div className="weight-input">
-          <label>Under 5 years</label>
-          <div className="weight-value-row">
-            <input
-              type="range"
-              min={50}
-              max={200}
-              step={1}
-              value={weights.under5}
-              onChange={(e) => handleWeightChange("under5", parseFloat(e.target.value))}
-            />
-            <span className="weight-value">{weights.under5.toFixed(1)}</span>
-          </div>
-        </div>
-
-        <div className="weight-input">
-          <label>Ages 5-14</label>
-          <div className="weight-value-row">
-            <input
-              type="range"
-              min={50}
-              max={150}
-              step={1}
-              value={weights.age5to14}
-              onChange={(e) => handleWeightChange("age5to14", parseFloat(e.target.value))}
-            />
-            <span className="weight-value">{weights.age5to14.toFixed(1)}</span>
-          </div>
-        </div>
-
-        <div className="weight-input">
-          <label>Ages 15+</label>
-          <div className="weight-value-row">
-            <input
-              type="range"
-              min={30}
-              max={120}
-              step={1}
-              value={weights.age15plus}
-              onChange={(e) => handleWeightChange("age15plus", parseFloat(e.target.value))}
-            />
-            <span className="weight-value">{weights.age15plus.toFixed(1)}</span>
-          </div>
-        </div>
-
-        <div className="weight-input discount-rate-input">
-          <label>Discount Rate</label>
-          <div className="weight-value-row">
-            <input
-              type="range"
-              min={0}
-              max={10}
-              step={0.5}
-              value={weights.discountRate * 100}
-              onChange={(e) => handleWeightChange("discountRate", parseFloat(e.target.value) / 100)}
-            />
-            <span className="weight-value">{(weights.discountRate * 100).toFixed(1)}%</span>
-          </div>
-          <span className="weight-hint">Rate for discounting future benefits (GiveWell uses 4%)</span>
-        </div>
+      <div className="panel-header" onClick={() => setExpanded(!expanded)} style={{ cursor: "pointer" }}>
+        <h3>Moral Weights {expanded ? "▼" : "▶"}</h3>
       </div>
 
-      <button className="reset-weights-btn" onClick={onReset}>
-        Reset to GiveWell defaults
-      </button>
+      {expanded && (
+        <>
+          <p className="panel-description">
+            Adjust the value assigned to averting deaths. GiveWell uses intervention-specific
+            weights reflecting years of life saved.
+          </p>
+
+          <div className="mode-selector">
+            <label>Input Mode:</label>
+            <select
+              value={weights.mode}
+              onChange={(e) => handleWeightChange("mode", e.target.value as MoralWeightMode)}
+            >
+              <option value="simple">Simple (multiplier)</option>
+              <option value="manual">Manual (intervention-specific)</option>
+            </select>
+          </div>
+
+          <div className="preset-selector">
+            <label>Preset:</label>
+            <select
+              onChange={(e) => handlePresetChange(e.target.value)}
+              value=""
+            >
+              <option value="" disabled>Load preset...</option>
+              {MORAL_WEIGHT_PRESETS.map(p => (
+                <option key={p.name} value={p.name}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {weights.mode === "simple" ? (
+            <div className="weights-grid">
+              <div className="weight-input">
+                <label>Consumption Multiplier</label>
+                <div className="weight-value-row">
+                  <input
+                    type="range"
+                    min={0.5}
+                    max={3}
+                    step={0.1}
+                    value={weights.consumptionMultiplier}
+                    onChange={(e) => handleWeightChange("consumptionMultiplier", parseFloat(e.target.value))}
+                  />
+                  <span className="weight-value">{weights.consumptionMultiplier.toFixed(1)}x</span>
+                </div>
+                <span className="weight-hint">Scales all mortality weights (1x = GiveWell default)</span>
+              </div>
+            </div>
+          ) : (
+            <div className="weights-grid">
+              <div className="weight-section">
+                <h4>Under-5 Deaths (by intervention)</h4>
+                <div className="weight-input">
+                  <label>Malaria (ITNs, SMC)</label>
+                  <div className="weight-value-row">
+                    <input
+                      type="range"
+                      min={50}
+                      max={250}
+                      step={1}
+                      value={weights.under5Malaria}
+                      onChange={(e) => handleWeightChange("under5Malaria", parseFloat(e.target.value))}
+                    />
+                    <span className="weight-value">{weights.under5Malaria.toFixed(0)}</span>
+                  </div>
+                </div>
+                <div className="weight-input">
+                  <label>Vitamin A (HKI)</label>
+                  <div className="weight-value-row">
+                    <input
+                      type="range"
+                      min={50}
+                      max={250}
+                      step={1}
+                      value={weights.under5VitaminA}
+                      onChange={(e) => handleWeightChange("under5VitaminA", parseFloat(e.target.value))}
+                    />
+                    <span className="weight-value">{weights.under5VitaminA.toFixed(0)}</span>
+                  </div>
+                </div>
+                <div className="weight-input">
+                  <label>Vaccines (New Incentives)</label>
+                  <div className="weight-value-row">
+                    <input
+                      type="range"
+                      min={50}
+                      max={250}
+                      step={1}
+                      value={weights.under5Vaccines}
+                      onChange={(e) => handleWeightChange("under5Vaccines", parseFloat(e.target.value))}
+                    />
+                    <span className="weight-value">{weights.under5Vaccines.toFixed(0)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="weight-section">
+                <h4>Older Deaths</h4>
+                <div className="weight-input">
+                  <label>Ages 5+ (malaria)</label>
+                  <div className="weight-value-row">
+                    <input
+                      type="range"
+                      min={30}
+                      max={150}
+                      step={1}
+                      value={weights.age5PlusMalaria}
+                      onChange={(e) => handleWeightChange("age5PlusMalaria", parseFloat(e.target.value))}
+                    />
+                    <span className="weight-value">{weights.age5PlusMalaria.toFixed(0)}</span>
+                  </div>
+                </div>
+                <div className="weight-input">
+                  <label>Ages 5-14 (vaccines)</label>
+                  <div className="weight-value-row">
+                    <input
+                      type="range"
+                      min={50}
+                      max={200}
+                      step={1}
+                      value={weights.age5to14}
+                      onChange={(e) => handleWeightChange("age5to14", parseFloat(e.target.value))}
+                    />
+                    <span className="weight-value">{weights.age5to14.toFixed(0)}</span>
+                  </div>
+                </div>
+                <div className="weight-input">
+                  <label>Ages 15-49</label>
+                  <div className="weight-value-row">
+                    <input
+                      type="range"
+                      min={30}
+                      max={150}
+                      step={1}
+                      value={weights.age15to49}
+                      onChange={(e) => handleWeightChange("age15to49", parseFloat(e.target.value))}
+                    />
+                    <span className="weight-value">{weights.age15to49.toFixed(0)}</span>
+                  </div>
+                </div>
+                <div className="weight-input">
+                  <label>Ages 50-74</label>
+                  <div className="weight-value-row">
+                    <input
+                      type="range"
+                      min={10}
+                      max={100}
+                      step={1}
+                      value={weights.age50to74}
+                      onChange={(e) => handleWeightChange("age50to74", parseFloat(e.target.value))}
+                    />
+                    <span className="weight-value">{weights.age50to74.toFixed(0)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="weight-input discount-rate-input">
+            <label>Discount Rate</label>
+            <div className="weight-value-row">
+              <input
+                type="range"
+                min={0}
+                max={10}
+                step={0.5}
+                value={weights.discountRate * 100}
+                onChange={(e) => handleWeightChange("discountRate", parseFloat(e.target.value) / 100)}
+              />
+              <span className="weight-value">{(weights.discountRate * 100).toFixed(1)}%</span>
+            </div>
+            <span className="weight-hint">Rate for discounting future benefits (GiveWell uses 4%)</span>
+          </div>
+
+          <button className="reset-weights-btn" onClick={onReset}>
+            Reset to GiveWell defaults
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -130,7 +278,27 @@ interface CharityCardProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   onInputChange: (inputs: CharityInputs) => void;
+  onCountryChange: (country: string) => void;
+  selectedCountry: string;
   maxXBenchmark: number;
+}
+
+// Get country options for a charity type
+function getCountryOptions(charityType: CharityType): { value: string; label: string }[] {
+  switch (charityType) {
+    case "amf":
+      return AMF_COUNTRIES.map(c => ({ value: c, label: AMF_COUNTRY_NAMES[c] }));
+    case "malaria-consortium":
+      return MC_COUNTRIES.map(c => ({ value: c, label: MC_COUNTRY_NAMES[c] }));
+    case "helen-keller":
+      return HK_COUNTRIES.map(c => ({ value: c, label: HK_COUNTRY_NAMES[c] }));
+    case "new-incentives":
+      return NI_COUNTRIES.map(c => ({ value: c, label: NI_COUNTRY_NAMES[c] }));
+    case "givedirectly":
+      return GD_COUNTRIES.map(c => ({ value: c, label: GD_COUNTRY_NAMES[c] }));
+    case "deworming":
+      return DW_VARIANTS.map(c => ({ value: c, label: DW_VARIANT_NAMES[c] }));
+  }
 }
 
 function CharityCard({
@@ -141,6 +309,8 @@ function CharityCard({
   isExpanded,
   onToggleExpand,
   onInputChange,
+  onCountryChange,
+  selectedCountry,
   maxXBenchmark,
 }: CharityCardProps) {
   const barWidth = (results.finalXBenchmark / maxXBenchmark) * 100;
@@ -185,7 +355,19 @@ function CharityCard({
               {config.abbrev}
             </span>
           </div>
-          <h3>{config.name}</h3>
+          <div className="charity-name-row">
+            <h3>{config.name}</h3>
+            <select
+              className="country-selector"
+              value={selectedCountry}
+              onChange={(e) => onCountryChange(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {getCountryOptions(config.type).map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
         <button className="expand-btn" onClick={onToggleExpand}>
           {isExpanded ? "−" : "+"}
@@ -259,8 +441,28 @@ function CharityCard({
   );
 }
 
+// Country selection type
+type SelectedCountries = {
+  amf: AMFCountry;
+  "malaria-consortium": MCCountry;
+  "helen-keller": HKCountry;
+  "new-incentives": NICountry;
+  givedirectly: GDCountry;
+  deworming: DWVariant;
+};
+
 function App() {
   const [expandedCharity, setExpandedCharity] = useState<CharityType | null>(null);
+
+  // Country selection state
+  const [selectedCountries, setSelectedCountries] = useState<SelectedCountries>({
+    amf: "chad",
+    "malaria-consortium": "burkina_faso",
+    "helen-keller": "drc",
+    "new-incentives": "bauchi",
+    givedirectly: "kenya",
+    deworming: "base",
+  });
 
   // Moral weights state
   const [moralWeights, setMoralWeights] = useState<MoralWeights>({
@@ -310,6 +512,56 @@ function App() {
     });
     setMoralWeights({ ...DEFAULT_MORAL_WEIGHTS });
   }, []);
+
+  // Handle country change - updates inputs to country-specific values
+  const handleCountryChange = useCallback((charityType: CharityType, country: string) => {
+    const grantSize = charityInputs[charityType].inputs.grantSize;
+
+    switch (charityType) {
+      case "amf":
+        setSelectedCountries(prev => ({ ...prev, amf: country as AMFCountry }));
+        setCharityInputs(prev => ({
+          ...prev,
+          amf: { type: "amf", inputs: getAMFInputsForCountry(country as AMFCountry, grantSize) },
+        }));
+        break;
+      case "malaria-consortium":
+        setSelectedCountries(prev => ({ ...prev, "malaria-consortium": country as MCCountry }));
+        setCharityInputs(prev => ({
+          ...prev,
+          "malaria-consortium": { type: "malaria-consortium", inputs: getMCInputsForCountry(country as MCCountry, grantSize) },
+        }));
+        break;
+      case "helen-keller":
+        setSelectedCountries(prev => ({ ...prev, "helen-keller": country as HKCountry }));
+        setCharityInputs(prev => ({
+          ...prev,
+          "helen-keller": { type: "helen-keller", inputs: getHKInputsForCountry(country as HKCountry, grantSize) },
+        }));
+        break;
+      case "new-incentives":
+        setSelectedCountries(prev => ({ ...prev, "new-incentives": country as NICountry }));
+        setCharityInputs(prev => ({
+          ...prev,
+          "new-incentives": { type: "new-incentives", inputs: getNIInputsForCountry(country as NICountry, grantSize) },
+        }));
+        break;
+      case "givedirectly":
+        setSelectedCountries(prev => ({ ...prev, givedirectly: country as GDCountry }));
+        setCharityInputs(prev => ({
+          ...prev,
+          givedirectly: { type: "givedirectly", inputs: getGDInputsForCountry(country as GDCountry, grantSize) },
+        }));
+        break;
+      case "deworming":
+        setSelectedCountries(prev => ({ ...prev, deworming: country as DWVariant }));
+        setCharityInputs(prev => ({
+          ...prev,
+          deworming: { type: "deworming", inputs: getDWInputsForVariant(country as DWVariant, grantSize) },
+        }));
+        break;
+    }
+  }, [charityInputs]);
 
   // Calculate results for all charities with moral weights applied
   const charityResults = useMemo(() => {
@@ -445,6 +697,8 @@ function App() {
                   )
                 }
                 onInputChange={(inputs) => handleInputChange(config.type, inputs)}
+                onCountryChange={(country) => handleCountryChange(config.type, country)}
+                selectedCountry={selectedCountries[config.type]}
                 maxXBenchmark={maxXBenchmark}
               />
             ))}
@@ -477,16 +731,6 @@ function App() {
                   )}
                 </span>
                 <span className="stat-label">Lowest cost per death averted</span>
-              </div>
-              <div className="summary-stat">
-                <span className="stat-value">
-                  {Object.values(charityResults)
-                    .reduce((sum, r) => sum + r.deathsAvertedUnder5, 0)
-                    .toFixed(0)}
-                </span>
-                <span className="stat-label">
-                  Total deaths averted (all grants)
-                </span>
               </div>
             </div>
           </div>

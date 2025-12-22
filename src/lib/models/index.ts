@@ -37,11 +37,48 @@ import {
 } from "./deworming";
 import {
   type MoralWeights,
-  getAge5PlusMoralWeight,
+  getUnder5Weight,
+  getAge5PlusWeight,
 } from "../moral-weights";
 
-export { DEFAULT_MORAL_WEIGHTS, MORAL_WEIGHT_PRESETS } from "../moral-weights";
-export type { MoralWeights, MoralWeightPreset } from "../moral-weights";
+export { DEFAULT_MORAL_WEIGHTS, MORAL_WEIGHT_PRESETS, toLegacyWeights, getAge5PlusMoralWeight } from "../moral-weights";
+export type { MoralWeights, MoralWeightPreset, LegacyMoralWeights, MoralWeightMode } from "../moral-weights";
+
+// Export country data
+export {
+  AMF_COUNTRIES,
+  AMF_COUNTRY_NAMES,
+  AMF_COUNTRY_PARAMS,
+  MC_COUNTRIES,
+  MC_COUNTRY_NAMES,
+  MC_COUNTRY_PARAMS,
+  HK_COUNTRIES,
+  HK_COUNTRY_NAMES,
+  HK_COUNTRY_PARAMS,
+  NI_COUNTRIES,
+  NI_COUNTRY_NAMES,
+  NI_COUNTRY_PARAMS,
+  GD_COUNTRIES,
+  GD_COUNTRY_NAMES,
+  GD_COUNTRY_PARAMS,
+  DW_VARIANTS,
+  DW_VARIANT_NAMES,
+  DW_VARIANT_PARAMS,
+  getAMFInputsForCountry,
+  getMCInputsForCountry,
+  getHKInputsForCountry,
+  getNIInputsForCountry,
+  getGDInputsForCountry,
+  getDWInputsForVariant,
+} from "./countries";
+export type {
+  AMFCountry,
+  MCCountry,
+  HKCountry,
+  NICountry,
+  GDCountry,
+  DWVariant,
+} from "./countries";
 
 export type CharityType = "amf" | "malaria-consortium" | "helen-keller" | "new-incentives" | "givedirectly" | "deworming";
 
@@ -331,21 +368,25 @@ export function getDefaultInputs(type: CharityType): CharityInputs {
  * Apply custom moral weights to charity inputs.
  * This updates the moral weight parameters in each charity's inputs
  * based on the user's custom moral weight settings.
+ *
+ * Uses intervention-specific weights:
+ * - AMF/MC: malaria weights
+ * - Helen Keller: vitamin A weights
+ * - New Incentives: vaccine weights
+ * - GiveDirectly: cash weights (defaults to malaria)
  */
 export function applyMoralWeights(
   charityInputs: CharityInputs,
   moralWeights: MoralWeights
 ): CharityInputs {
-  const age5PlusWeight = getAge5PlusMoralWeight(moralWeights);
-
   switch (charityInputs.type) {
     case "amf":
       return {
         type: "amf",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: moralWeights.under5,
-          moralWeight5Plus: age5PlusWeight,
+          moralWeightUnder5: getUnder5Weight(moralWeights, "malaria"),
+          moralWeight5Plus: getAge5PlusWeight(moralWeights),
         },
       };
     case "malaria-consortium":
@@ -353,7 +394,7 @@ export function applyMoralWeights(
         type: "malaria-consortium",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: moralWeights.under5,
+          moralWeightUnder5: getUnder5Weight(moralWeights, "malaria"),
         },
       };
     case "helen-keller":
@@ -361,7 +402,7 @@ export function applyMoralWeights(
         type: "helen-keller",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: moralWeights.under5,
+          moralWeightUnder5: getUnder5Weight(moralWeights, "vitaminA"),
         },
       };
     case "new-incentives":
@@ -369,7 +410,7 @@ export function applyMoralWeights(
         type: "new-incentives",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: moralWeights.under5,
+          moralWeightUnder5: getUnder5Weight(moralWeights, "vaccines"),
         },
       };
     case "givedirectly":
@@ -377,11 +418,18 @@ export function applyMoralWeights(
         type: "givedirectly",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: moralWeights.under5,
+          moralWeightUnder5: getUnder5Weight(moralWeights, "cash"),
+          discountRate: moralWeights.discountRate,
         },
       };
     case "deworming":
-      // Deworming doesn't use moral weights (income-based, not mortality)
-      return charityInputs;
+      // Deworming uses discount rate but not mortality weights
+      return {
+        type: "deworming",
+        inputs: {
+          ...charityInputs.inputs,
+          discountRate: moralWeights.discountRate,
+        },
+      };
   }
 }
