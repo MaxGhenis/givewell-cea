@@ -15,6 +15,7 @@ describe("applyMoralWeights", () => {
         under5: 150,
         age5to14: 120,
         age15plus: 90,
+        discountRate: 0.04,
       };
 
       const result = applyMoralWeights(inputs, customWeights);
@@ -39,6 +40,7 @@ describe("applyMoralWeights", () => {
         under5: DEFAULT_MORAL_WEIGHTS.under5 * 2,
         age5to14: DEFAULT_MORAL_WEIGHTS.age5to14 * 2,
         age15plus: DEFAULT_MORAL_WEIGHTS.age15plus * 2,
+        discountRate: DEFAULT_MORAL_WEIGHTS.discountRate,
       };
       const customResult = calculateCharity(
         applyMoralWeights(inputs, customWeights)
@@ -58,6 +60,7 @@ describe("applyMoralWeights", () => {
         under5: 200,
         age5to14: 100,
         age15plus: 50,
+        discountRate: 0.04,
       };
 
       const result = applyMoralWeights(inputs, customWeights);
@@ -75,6 +78,7 @@ describe("applyMoralWeights", () => {
         under5: 130,
         age5to14: 110,
         age15plus: 80,
+        discountRate: 0.04,
       };
 
       const result = applyMoralWeights(inputs, customWeights);
@@ -92,6 +96,7 @@ describe("applyMoralWeights", () => {
         under5: 140,
         age5to14: 100,
         age15plus: 70,
+        discountRate: 0.04,
       };
 
       const result = applyMoralWeights(inputs, customWeights);
@@ -109,6 +114,7 @@ describe("applyMoralWeights", () => {
         under5: 150,
         age5to14: 100,
         age15plus: 75,
+        discountRate: 0.04,
       };
 
       for (const type of types) {

@@ -33,6 +33,13 @@ export interface MoralWeights {
    * Default: ~50-70 UoV (lower due to fewer remaining life-years).
    */
   age15plus: number;
+
+  /**
+   * Discount rate for future benefits (real, annual).
+   * GiveWell uses 4% for discounting future consumption/income gains.
+   * Applied to deworming income benefits and cash transfer persistence.
+   */
+  discountRate: number;
 }
 
 /**
@@ -46,6 +53,7 @@ export const DEFAULT_MORAL_WEIGHTS: MoralWeights = {
   under5: 116.25, // Average from GiveWell spreadsheets (ranges 116.25-118.73)
   age5to14: 95.0, // Midpoint estimate for 5-14 age range
   age15plus: 73.19, // From AMF spreadsheet for 5+ adjustment
+  discountRate: 0.04, // GiveWell's standard 4% real discount rate
 };
 
 /**
@@ -70,35 +78,8 @@ export interface MoralWeightPreset {
 export const MORAL_WEIGHT_PRESETS: MoralWeightPreset[] = [
   {
     name: "GiveWell Default",
-    description: "GiveWell's standard moral weights based on expected life-years",
+    description: "GiveWell's standard moral weights based on expected life-years (4% discount rate)",
     weights: DEFAULT_MORAL_WEIGHTS,
-  },
-  {
-    name: "Equal Value",
-    description: "All lives valued equally regardless of age",
-    weights: {
-      under5: 100,
-      age5to14: 100,
-      age15plus: 100,
-    },
-  },
-  {
-    name: "Child-Focused",
-    description: "Higher weight on younger lives (more years saved)",
-    weights: {
-      under5: 150,
-      age5to14: 100,
-      age15plus: 60,
-    },
-  },
-  {
-    name: "Low Discount Rate",
-    description: "Higher weights overall (less discounting of future years)",
-    weights: {
-      under5: 140,
-      age5to14: 115,
-      age15plus: 90,
-    },
   },
 ];
 

@@ -84,7 +84,7 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "malaria-consortium",
     color: "#1B7F79",
     description: "Provides seasonal malaria chemoprevention to children",
-    logoUrl: "https://cdn.brandfetch.io/idvLJJdkC2/theme/dark/logo.svg",
+    logoUrl: "", // No reliable public logo URL found - using text fallback
   },
   {
     name: "Helen Keller International",
@@ -108,7 +108,7 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "givedirectly",
     color: "#F5A623",
     description: "Provides unconditional cash transfers directly to people in poverty",
-    logoUrl: "https://cdn.prod.website-files.com/5bec3c85cd9b920d3af2f0a8/5bec3c85cd9b92b19ff2f0b7_gd-logo-orange.svg",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/7/7c/GiveDirectly_logo.svg",
   },
   {
     name: "Deworm the World",
@@ -116,7 +116,7 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "deworming",
     color: "#8B5CF6",
     description: "Provides school-based deworming to prevent worm infections in children",
-    logoUrl: "https://www.evidenceaction.org/wp-content/uploads/2024/01/EA-Logo-Full-Colour-2024-copy.svg",
+    logoUrl: "", // No reliable public logo URL found - using text fallback
   },
 ];
 

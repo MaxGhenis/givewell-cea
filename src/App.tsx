@@ -15,7 +15,6 @@ import {
   DEFAULT_GD_INPUTS,
   DEFAULT_DW_INPUTS,
   DEFAULT_MORAL_WEIGHTS,
-  MORAL_WEIGHT_PRESETS,
 } from "./lib/models";
 import {
   runCharityMonteCarlo,
@@ -41,18 +40,7 @@ interface MoralWeightsPanelProps {
 }
 
 function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProps) {
-  const [selectedPreset, setSelectedPreset] = useState<string>("GiveWell Default");
-
-  const handlePresetChange = (presetName: string) => {
-    setSelectedPreset(presetName);
-    const preset = MORAL_WEIGHT_PRESETS.find((p) => p.name === presetName);
-    if (preset) {
-      onChange(preset.weights);
-    }
-  };
-
   const handleWeightChange = (key: keyof MoralWeights, value: number) => {
-    setSelectedPreset("custom");
     onChange({ ...weights, [key]: value });
   };
 
@@ -63,21 +51,6 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
         Adjust the value assigned to averting deaths at different ages.
         Higher values mean saving that age group is considered more valuable.
       </p>
-
-      <div className="preset-selector">
-        <label>Preset:</label>
-        <select
-          value={selectedPreset}
-          onChange={(e) => handlePresetChange(e.target.value)}
-        >
-          <option value="custom">Custom</option>
-          {MORAL_WEIGHT_PRESETS.map((preset) => (
-            <option key={preset.name} value={preset.name}>
-              {preset.name}
-            </option>
-          ))}
-        </select>
-      </div>
 
       <div className="weights-grid">
         <div className="weight-input">
@@ -124,12 +97,25 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
             <span className="weight-value">{weights.age15plus.toFixed(1)}</span>
           </div>
         </div>
+
+        <div className="weight-input discount-rate-input">
+          <label>Discount Rate</label>
+          <div className="weight-value-row">
+            <input
+              type="range"
+              min={0}
+              max={10}
+              step={0.5}
+              value={weights.discountRate * 100}
+              onChange={(e) => handleWeightChange("discountRate", parseFloat(e.target.value) / 100)}
+            />
+            <span className="weight-value">{(weights.discountRate * 100).toFixed(1)}%</span>
+          </div>
+          <span className="weight-hint">Rate for discounting future benefits (GiveWell uses 4%)</span>
+        </div>
       </div>
 
-      <button className="reset-weights-btn" onClick={() => {
-        setSelectedPreset("GiveWell Default");
-        onReset();
-      }}>
+      <button className="reset-weights-btn" onClick={onReset}>
         Reset to GiveWell defaults
       </button>
     </div>
@@ -176,20 +162,25 @@ function CharityCard({
       <div className="charity-header" style={{ borderLeftColor: config.color }}>
         <div className="charity-title">
           <div className="charity-logo-container">
-            <img
-              src={config.logoUrl}
-              alt={`${config.name} logo`}
-              className="charity-logo"
-              onError={(e) => {
-                // Fallback to abbreviation if logo fails to load
-                e.currentTarget.style.display = "none";
-                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                if (fallback) fallback.style.display = "flex";
-              }}
-            />
+            {config.logoUrl ? (
+              <img
+                src={config.logoUrl}
+                alt={`${config.name} logo`}
+                className="charity-logo"
+                onError={(e) => {
+                  // Fallback to abbreviation if logo fails to load
+                  e.currentTarget.style.display = "none";
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = "flex";
+                }}
+              />
+            ) : null}
             <span
               className="charity-abbrev"
-              style={{ backgroundColor: config.color, display: "none" }}
+              style={{
+                backgroundColor: config.color,
+                display: config.logoUrl ? "none" : "flex"
+              }}
             >
               {config.abbrev}
             </span>
@@ -391,7 +382,7 @@ function App() {
       <div className="grain-overlay" />
 
       <div className="disclaimer-banner">
-        Independent tool by <a href="https://github.com/MaxGhenis">Max Ghenis</a> — not affiliated with GiveWell.
+        Independent tool by <a href="https://maxghenis.com">Max Ghenis</a> — not affiliated with GiveWell.
         See <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">GiveWell's official CEA spreadsheet</a>.
       </div>
 
@@ -512,11 +503,27 @@ function App() {
             <ul className="charity-list">
               {CHARITY_CONFIGS.map((config) => (
                 <li key={config.type} className="charity-list-item">
-                  <img
-                    src={config.logoUrl}
-                    alt={`${config.abbrev} logo`}
-                    className="charity-list-logo"
-                  />
+                  {config.logoUrl ? (
+                    <img
+                      src={config.logoUrl}
+                      alt={`${config.abbrev} logo`}
+                      className="charity-list-logo"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <span
+                    className="charity-list-abbrev"
+                    style={{
+                      backgroundColor: config.color,
+                      display: config.logoUrl ? "none" : "flex"
+                    }}
+                  >
+                    {config.abbrev}
+                  </span>
                   <span>
                     <strong>{config.abbrev}</strong>: {config.description}
                   </span>
@@ -543,14 +550,17 @@ function App() {
       <footer className="footer">
         <p>
           Built by{" "}
-          <a href="https://github.com/MaxGhenis">Max Ghenis</a> (not affiliated with GiveWell).{" "}
+          <a href="https://maxghenis.com">Max Ghenis</a> (not affiliated with GiveWell).{" "}
           Data from{" "}
           <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">
             GiveWell's November 2025 CEA
           </a>.
           <br />
-          <a href="https://github.com/MaxGhenis/givewell-cea-tool">
-            View source on GitHub
+          <a href="https://github.com/MaxGhenis/givewell-cea-tool" className="github-link">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style={{ verticalAlign: 'text-bottom', marginRight: '4px' }}>
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            View source
           </a>{" "}
           |{" "}
           <a href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness/cost-effectiveness-models" target="_blank" rel="noopener noreferrer">
