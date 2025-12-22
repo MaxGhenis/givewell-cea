@@ -104,6 +104,7 @@ export interface CharityConfig {
   color: string;
   description: string;
   logoUrl: string;
+  websiteUrl: string;
 }
 
 export const CHARITY_CONFIGS: CharityConfig[] = [
@@ -114,6 +115,7 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     color: "#0D5C63",
     description: "Distributes insecticide-treated bed nets to prevent malaria",
     logoUrl: "https://www.againstmalaria.com/downloads/AMF_logo_medium.png",
+    websiteUrl: "https://www.againstmalaria.com/",
   },
   {
     name: "Malaria Consortium",
@@ -121,7 +123,8 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "malaria-consortium",
     color: "#1B7F79",
     description: "Provides seasonal malaria chemoprevention to children",
-    logoUrl: "", // No reliable public logo URL found - using text fallback
+    logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2elJfakVwQ1afU9SXzb9-3duJMeGCoMIqvg&s",
+    websiteUrl: "https://www.malariaconsortium.org/",
   },
   {
     name: "Helen Keller International",
@@ -129,7 +132,8 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "helen-keller",
     color: "#2A9D8F",
     description: "Delivers vitamin A supplementation to prevent child mortality",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/8/8a/Helen_Keller_International_logo.svg",
+    logoUrl: "https://helenkellerintl.org/wp-content/uploads/2024/05/HKIntl_Logo_Secondary_HorizontalStacked_RGB-3.jpg",
+    websiteUrl: "https://helenkellerintl.org/",
   },
   {
     name: "New Incentives",
@@ -137,7 +141,8 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "new-incentives",
     color: "#48B89F",
     description: "Uses cash incentives to increase childhood vaccination rates",
-    logoUrl: "https://cdn.prod.website-files.com/5f7c51bf9fac9b5ed62aa37b/5f7c51bf9fac9b49b12aa3f0_Group%20345.svg",
+    logoUrl: "https://cdn.prod.website-files.com/5f7c51bf9fac9b5ed62aa37b/5f7c51bf9fac9b85c42aa3df_Group%20344%20(1).svg",
+    websiteUrl: "https://www.newincentives.org/",
   },
   {
     name: "GiveDirectly",
@@ -145,7 +150,8 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "givedirectly",
     color: "#F5A623",
     description: "Provides unconditional cash transfers directly to people in poverty",
-    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/7/7c/GiveDirectly_logo.svg",
+    logoUrl: "https://www.givedirectly.org/wp-content/uploads/2020/02/cropped-knowledge_graph_logo-1.jpg",
+    websiteUrl: "https://www.givedirectly.org/",
   },
   {
     name: "Deworm the World",
@@ -153,7 +159,8 @@ export const CHARITY_CONFIGS: CharityConfig[] = [
     type: "deworming",
     color: "#8B5CF6",
     description: "Provides school-based deworming to prevent worm infections in children",
-    logoUrl: "", // No reliable public logo URL found - using text fallback
+    logoUrl: "https://www.givewell.org/sites/default/files/charity_logos/Deworm-the-World.jpg",
+    websiteUrl: "https://www.evidenceaction.org/dewormtheworld/",
   },
 ];
 

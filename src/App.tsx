@@ -274,7 +274,13 @@ function CharityCard({
     <div className="charity-card">
       <div className="charity-header" style={{ borderLeftColor: config.color }}>
         <div className="charity-title">
-          <div className="charity-logo-container">
+          <a
+            href={config.websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="charity-logo-container"
+            onClick={(e) => e.stopPropagation()}
+          >
             {config.logoUrl ? (
               <img
                 src={config.logoUrl}
@@ -297,7 +303,7 @@ function CharityCard({
             >
               {config.abbrev}
             </span>
-          </div>
+          </a>
           <div className="charity-name-row">
             <h3>{config.name}</h3>
             <select
@@ -622,29 +628,38 @@ function App() {
             <ul className="charity-list">
               {CHARITY_CONFIGS.map((config) => (
                 <li key={config.type} className="charity-list-item">
-                  {config.logoUrl ? (
-                    <img
-                      src={config.logoUrl}
-                      alt={`${config.abbrev} logo`}
-                      className="charity-list-logo"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (fallback) fallback.style.display = "flex";
-                      }}
-                    />
-                  ) : null}
-                  <span
-                    className="charity-list-abbrev"
-                    style={{
-                      backgroundColor: config.color,
-                      display: config.logoUrl ? "none" : "flex"
-                    }}
+                  <a
+                    href={config.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="charity-list-logo-link"
                   >
-                    {config.abbrev}
-                  </span>
+                    {config.logoUrl ? (
+                      <img
+                        src={config.logoUrl}
+                        alt={`${config.abbrev} logo`}
+                        className="charity-list-logo"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = "flex";
+                        }}
+                      />
+                    ) : null}
+                    <span
+                      className="charity-list-abbrev"
+                      style={{
+                        backgroundColor: config.color,
+                        display: config.logoUrl ? "none" : "flex"
+                      }}
+                    >
+                      {config.abbrev}
+                    </span>
+                  </a>
                   <span>
-                    <strong>{config.abbrev}</strong>: {config.description}
+                    <a href={config.websiteUrl} target="_blank" rel="noopener noreferrer">
+                      <strong>{config.abbrev}</strong>
+                    </a>: {config.description}
                   </span>
                 </li>
               ))}
