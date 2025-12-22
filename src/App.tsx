@@ -93,26 +93,30 @@ function UncertaintyToggle({ showUncertainty, isRunningMC, onToggle }: Uncertain
         <div className="uncertainty-explanation">
           <p>
             <strong>Monte Carlo Simulation</strong>: We run 500 simulations, randomly
-            sampling each parameter within its uncertainty range to generate a
-            distribution of possible cost-effectiveness values.
+            sampling each parameter to generate a distribution of possible
+            cost-effectiveness values.
           </p>
           <p>
-            <strong>Parameter Uncertainty</strong>: Key parameters are sampled from
-            probability distributions:
+            <strong>⚠️ Illustrative Only</strong>: The uncertainty ranges used here
+            (±20-40% depending on parameter type) are <em>not empirically estimated</em>.
+            They're placeholder values to demonstrate how uncertainty propagates
+            through the model.
           </p>
-          <ul>
-            <li>Costs: ±20% (log-normal)</li>
-            <li>Mortality rates: ±30% (log-normal)</li>
-            <li>Intervention effects: ±25% (truncated normal)</li>
-            <li>Adjustment factors: ±40% (truncated normal)</li>
-          </ul>
           <p>
-            <strong>90% CI</strong>: The shaded bar shows the 10th to 90th
-            percentile range—80% of simulations fall within this range.
+            <strong>GiveWell's Approach</strong>: GiveWell uses 25th/75th percentiles
+            based on subjective judgment incorporating evidence quality—not the
+            90% CIs shown here. See their{" "}
+            <a
+              href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness/uncertainty-optimizers-curse"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              uncertainty methodology
+            </a>.
           </p>
           <p className="note">
-            Note: These are illustrative uncertainty ranges. GiveWell's actual
-            uncertainty analysis is more sophisticated.
+            To our knowledge, no one has rigorously estimated parameter-specific
+            distributions for GiveWell's CEA inputs.
           </p>
         </div>
       )}
