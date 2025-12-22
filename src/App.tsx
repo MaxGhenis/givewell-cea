@@ -60,6 +60,66 @@ function formatCurrency(n: number, decimals = 1): string {
   return `$${formatNumber(n, decimals)}`;
 }
 
+interface UncertaintyToggleProps {
+  showUncertainty: boolean;
+  isRunningMC: boolean;
+  onToggle: (show: boolean) => void;
+}
+
+function UncertaintyToggle({ showUncertainty, isRunningMC, onToggle }: UncertaintyToggleProps) {
+  const [showExplanation, setShowExplanation] = useState(false);
+
+  return (
+    <div className="uncertainty-toggle">
+      <label className="toggle-label">
+        <input
+          type="checkbox"
+          checked={showUncertainty}
+          onChange={(e) => onToggle(e.target.checked)}
+        />
+        <span className="toggle-text">
+          Show uncertainty (90% CI)
+          {isRunningMC && <span className="loading-indicator"> ...</span>}
+        </span>
+      </label>
+      <button
+        className="info-btn"
+        onClick={() => setShowExplanation(!showExplanation)}
+        title="How confidence intervals are calculated"
+      >
+        ?
+      </button>
+      {showExplanation && (
+        <div className="uncertainty-explanation">
+          <p>
+            <strong>Monte Carlo Simulation</strong>: We run 500 simulations, randomly
+            sampling each parameter within its uncertainty range to generate a
+            distribution of possible cost-effectiveness values.
+          </p>
+          <p>
+            <strong>Parameter Uncertainty</strong>: Key parameters are sampled from
+            probability distributions:
+          </p>
+          <ul>
+            <li>Costs: ±20% (log-normal)</li>
+            <li>Mortality rates: ±30% (log-normal)</li>
+            <li>Intervention effects: ±25% (truncated normal)</li>
+            <li>Adjustment factors: ±40% (truncated normal)</li>
+          </ul>
+          <p>
+            <strong>90% CI</strong>: The shaded bar shows the 10th to 90th
+            percentile range—80% of simulations fall within this range.
+          </p>
+          <p className="note">
+            Note: These are illustrative uncertainty ranges. GiveWell's actual
+            uncertainty analysis is more sophisticated.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface MoralWeightsPanelProps {
   weights: MoralWeights;
   onChange: (weights: MoralWeights) => void;
@@ -89,8 +149,9 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
       {expanded && (
         <>
           <p className="panel-description">
-            Adjust the value assigned to averting deaths. GiveWell uses intervention-specific
-            weights reflecting years of life saved.
+            Adjust the value assigned to averting deaths at different ages.
+            GiveWell's weights peak at ages 5-9 (134), reflecting both years
+            of life saved and donor preferences.
           </p>
 
           <div className="mode-selector">
@@ -100,7 +161,7 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
               onChange={(e) => handleWeightChange("mode", e.target.value as MoralWeightMode)}
             >
               <option value="simple">Simple (multiplier)</option>
-              <option value="manual">Manual (intervention-specific)</option>
+              <option value="manual">Manual (age-specific)</option>
             </select>
           </div>
 
@@ -120,92 +181,46 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
           {weights.mode === "simple" ? (
             <div className="weights-grid">
               <div className="weight-input">
-                <label>Consumption Multiplier</label>
+                <label>Weight Multiplier</label>
                 <div className="weight-value-row">
                   <input
                     type="range"
                     min={0.5}
                     max={3}
                     step={0.1}
-                    value={weights.consumptionMultiplier}
-                    onChange={(e) => handleWeightChange("consumptionMultiplier", parseFloat(e.target.value))}
+                    value={weights.multiplier}
+                    onChange={(e) => handleWeightChange("multiplier", parseFloat(e.target.value))}
                   />
-                  <span className="weight-value">{weights.consumptionMultiplier.toFixed(1)}x</span>
+                  <span className="weight-value">{weights.multiplier.toFixed(1)}x</span>
                 </div>
-                <span className="weight-hint">Scales all mortality weights (1x = GiveWell default)</span>
+                <span className="weight-hint">Scales all age weights (1x = GiveWell default)</span>
               </div>
             </div>
           ) : (
             <div className="weights-grid">
               <div className="weight-section">
-                <h4>Under-5 Deaths (by intervention)</h4>
+                <h4>Age-Specific Weights</h4>
                 <div className="weight-input">
-                  <label>Malaria (ITNs, SMC)</label>
+                  <label>Under 5 years</label>
                   <div className="weight-value-row">
                     <input
                       type="range"
                       min={50}
                       max={250}
                       step={1}
-                      value={weights.under5Malaria}
-                      onChange={(e) => handleWeightChange("under5Malaria", parseFloat(e.target.value))}
+                      value={weights.under5}
+                      onChange={(e) => handleWeightChange("under5", parseFloat(e.target.value))}
                     />
-                    <span className="weight-value">{weights.under5Malaria.toFixed(0)}</span>
+                    <span className="weight-value">{weights.under5.toFixed(0)}</span>
                   </div>
                 </div>
                 <div className="weight-input">
-                  <label>Vitamin A (HKI)</label>
+                  <label>Ages 5-14</label>
                   <div className="weight-value-row">
                     <input
                       type="range"
                       min={50}
                       max={250}
-                      step={1}
-                      value={weights.under5VitaminA}
-                      onChange={(e) => handleWeightChange("under5VitaminA", parseFloat(e.target.value))}
-                    />
-                    <span className="weight-value">{weights.under5VitaminA.toFixed(0)}</span>
-                  </div>
-                </div>
-                <div className="weight-input">
-                  <label>Vaccines (New Incentives)</label>
-                  <div className="weight-value-row">
-                    <input
-                      type="range"
-                      min={50}
-                      max={250}
-                      step={1}
-                      value={weights.under5Vaccines}
-                      onChange={(e) => handleWeightChange("under5Vaccines", parseFloat(e.target.value))}
-                    />
-                    <span className="weight-value">{weights.under5Vaccines.toFixed(0)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="weight-section">
-                <h4>Older Deaths</h4>
-                <div className="weight-input">
-                  <label>Ages 5+ (malaria)</label>
-                  <div className="weight-value-row">
-                    <input
-                      type="range"
-                      min={30}
-                      max={150}
-                      step={1}
-                      value={weights.age5PlusMalaria}
-                      onChange={(e) => handleWeightChange("age5PlusMalaria", parseFloat(e.target.value))}
-                    />
-                    <span className="weight-value">{weights.age5PlusMalaria.toFixed(0)}</span>
-                  </div>
-                </div>
-                <div className="weight-input">
-                  <label>Ages 5-14 (vaccines)</label>
-                  <div className="weight-value-row">
-                    <input
-                      type="range"
-                      min={50}
-                      max={200}
                       step={1}
                       value={weights.age5to14}
                       onChange={(e) => handleWeightChange("age5to14", parseFloat(e.target.value))}
@@ -219,7 +234,7 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
                     <input
                       type="range"
                       min={30}
-                      max={150}
+                      max={200}
                       step={1}
                       value={weights.age15to49}
                       onChange={(e) => handleWeightChange("age15to49", parseFloat(e.target.value))}
@@ -228,17 +243,17 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
                   </div>
                 </div>
                 <div className="weight-input">
-                  <label>Ages 50-74</label>
+                  <label>Ages 50+</label>
                   <div className="weight-value-row">
                     <input
                       type="range"
                       min={10}
-                      max={100}
+                      max={150}
                       step={1}
-                      value={weights.age50to74}
-                      onChange={(e) => handleWeightChange("age50to74", parseFloat(e.target.value))}
+                      value={weights.age50plus}
+                      onChange={(e) => handleWeightChange("age50plus", parseFloat(e.target.value))}
                     />
-                    <span className="weight-value">{weights.age50to74.toFixed(0)}</span>
+                    <span className="weight-value">{weights.age50plus.toFixed(0)}</span>
                   </div>
                 </div>
               </div>
@@ -667,19 +682,11 @@ function App() {
               Cost-effectiveness expressed as multiples of GiveWell's benchmark
               (unconditional cash transfers). Click + to expand and adjust parameters.
             </p>
-            <div className="uncertainty-toggle">
-              <label className="toggle-label">
-                <input
-                  type="checkbox"
-                  checked={showUncertainty}
-                  onChange={(e) => setShowUncertainty(e.target.checked)}
-                />
-                <span className="toggle-text">
-                  Show uncertainty (90% CI)
-                  {isRunningMC && <span className="loading-indicator"> ...</span>}
-                </span>
-              </label>
-            </div>
+            <UncertaintyToggle
+            showUncertainty={showUncertainty}
+            isRunningMC={isRunningMC}
+            onToggle={setShowUncertainty}
+          />
           </div>
 
           <div className="charities-grid">

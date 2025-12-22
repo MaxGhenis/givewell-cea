@@ -11,9 +11,9 @@
  */
 
 import type { AMFInputs } from "./amf";
-import type { MCInputs } from "./malaria-consortium";
-import type { HKInputs } from "./helen-keller";
-import type { NIInputs } from "./new-incentives";
+import type { MalariaConsortiumInputs } from "./malaria-consortium";
+import type { HelenKellerInputs } from "./helen-keller";
+import type { NewIncentivesInputs } from "./new-incentives";
 import type { GiveDirectlyInputs } from "./givedirectly";
 import type { DewormingInputs } from "./deworming";
 
@@ -107,7 +107,7 @@ export const MC_COUNTRY_NAMES: Record<MCCountry, string> = {
   cote_divoire: "Cote d'Ivoire",
 };
 
-export const MC_COUNTRY_PARAMS: Record<MCCountry, Omit<MCInputs, "grantSize">> = {
+export const MC_COUNTRY_PARAMS: Record<MCCountry, Omit<MalariaConsortiumInputs, "grantSize">> = {
   burkina_faso: {
     costPerChildReached: 6.330085089,
     proportionMortalityDuringSeason: 0.7,
@@ -162,7 +162,7 @@ export const HK_COUNTRY_NAMES: Record<HKCountry, string> = {
   drc: "DRC",
 };
 
-export const HK_COUNTRY_PARAMS: Record<HKCountry, Omit<HKInputs, "grantSize">> = {
+export const HK_COUNTRY_PARAMS: Record<HKCountry, Omit<HelenKellerInputs, "grantSize">> = {
   burkina_faso: {
     costPerPersonUnder5: 2.339766082,
     proportionReachedCounterfactual: 0.2856,
@@ -214,7 +214,7 @@ export const NI_COUNTRY_NAMES: Record<NICountry, string> = {
   jigawa: "Jigawa",
 };
 
-export const NI_COUNTRY_PARAMS: Record<NICountry, Omit<NIInputs, "grantSize">> = {
+export const NI_COUNTRY_PARAMS: Record<NICountry, Omit<NewIncentivesInputs, "grantSize">> = {
   bauchi: {
     costPerChildReached: 18.21,
     proportionReachedCounterfactual: 0.8147,
@@ -373,6 +373,7 @@ export const DW_VARIANT_PARAMS: Record<DWVariant, Omit<DewormingInputs, "grantSi
     infectionPrevalence: 0.40,
     incomeEffect: 0.13,
     benefitDurationYears: 40,
+    benefitDecayRate: 0.0,
     discountRate: 0.04,
     baselineIncome: 800,
     averageAgeAtTreatment: 8,
@@ -387,6 +388,7 @@ export const DW_VARIANT_PARAMS: Record<DWVariant, Omit<DewormingInputs, "grantSi
     infectionPrevalence: 0.60,
     incomeEffect: 0.13,
     benefitDurationYears: 40,
+    benefitDecayRate: 0.0,
     discountRate: 0.04,
     baselineIncome: 800,
     averageAgeAtTreatment: 8,
@@ -401,6 +403,7 @@ export const DW_VARIANT_PARAMS: Record<DWVariant, Omit<DewormingInputs, "grantSi
     infectionPrevalence: 0.25,
     incomeEffect: 0.13,
     benefitDurationYears: 40,
+    benefitDecayRate: 0.0,
     discountRate: 0.04,
     baselineIncome: 800,
     averageAgeAtTreatment: 8,
@@ -418,15 +421,15 @@ export function getAMFInputsForCountry(country: AMFCountry, grantSize: number = 
   return { ...AMF_COUNTRY_PARAMS[country], grantSize };
 }
 
-export function getMCInputsForCountry(country: MCCountry, grantSize: number = 1_000_000): MCInputs {
+export function getMCInputsForCountry(country: MCCountry, grantSize: number = 1_000_000): MalariaConsortiumInputs {
   return { ...MC_COUNTRY_PARAMS[country], grantSize };
 }
 
-export function getHKInputsForCountry(country: HKCountry, grantSize: number = 1_000_000): HKInputs {
+export function getHKInputsForCountry(country: HKCountry, grantSize: number = 1_000_000): HelenKellerInputs {
   return { ...HK_COUNTRY_PARAMS[country], grantSize };
 }
 
-export function getNIInputsForCountry(country: NICountry, grantSize: number = 1_000_000): NIInputs {
+export function getNIInputsForCountry(country: NICountry, grantSize: number = 1_000_000): NewIncentivesInputs {
   return { ...NI_COUNTRY_PARAMS[country], grantSize };
 }
 

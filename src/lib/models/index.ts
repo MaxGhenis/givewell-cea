@@ -41,8 +41,8 @@ import {
   getAge5PlusWeight,
 } from "../moral-weights";
 
-export { DEFAULT_MORAL_WEIGHTS, MORAL_WEIGHT_PRESETS, toLegacyWeights, getAge5PlusMoralWeight } from "../moral-weights";
-export type { MoralWeights, MoralWeightPreset, LegacyMoralWeights, MoralWeightMode } from "../moral-weights";
+export { DEFAULT_MORAL_WEIGHTS, MORAL_WEIGHT_PRESETS, getAge5PlusMoralWeight } from "../moral-weights";
+export type { MoralWeights, MoralWeightPreset, MoralWeightMode } from "../moral-weights";
 
 // Export country data
 export {
@@ -369,11 +369,9 @@ export function getDefaultInputs(type: CharityType): CharityInputs {
  * This updates the moral weight parameters in each charity's inputs
  * based on the user's custom moral weight settings.
  *
- * Uses intervention-specific weights:
- * - AMF/MC: malaria weights
- * - Helen Keller: vitamin A weights
- * - New Incentives: vaccine weights
- * - GiveDirectly: cash weights (defaults to malaria)
+ * Uses age-based weights:
+ * - Under 5 deaths: under5 weight
+ * - Ages 5+: weighted average of age5to14, age15to49, age50plus
  */
 export function applyMoralWeights(
   charityInputs: CharityInputs,
@@ -385,7 +383,7 @@ export function applyMoralWeights(
         type: "amf",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: getUnder5Weight(moralWeights, "malaria"),
+          moralWeightUnder5: getUnder5Weight(moralWeights),
           moralWeight5Plus: getAge5PlusWeight(moralWeights),
         },
       };
@@ -394,7 +392,7 @@ export function applyMoralWeights(
         type: "malaria-consortium",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: getUnder5Weight(moralWeights, "malaria"),
+          moralWeightUnder5: getUnder5Weight(moralWeights),
         },
       };
     case "helen-keller":
@@ -402,7 +400,7 @@ export function applyMoralWeights(
         type: "helen-keller",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: getUnder5Weight(moralWeights, "vitaminA"),
+          moralWeightUnder5: getUnder5Weight(moralWeights),
         },
       };
     case "new-incentives":
@@ -410,7 +408,7 @@ export function applyMoralWeights(
         type: "new-incentives",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: getUnder5Weight(moralWeights, "vaccines"),
+          moralWeightUnder5: getUnder5Weight(moralWeights),
         },
       };
     case "givedirectly":
@@ -418,7 +416,7 @@ export function applyMoralWeights(
         type: "givedirectly",
         inputs: {
           ...charityInputs.inputs,
-          moralWeightUnder5: getUnder5Weight(moralWeights, "cash"),
+          moralWeightUnder5: getUnder5Weight(moralWeights),
           discountRate: moralWeights.discountRate,
         },
       };

@@ -4,30 +4,27 @@ import {
   MORAL_WEIGHT_PRESETS,
   getAge5PlusMoralWeight,
   scaleMoralWeight,
-  toLegacyWeights,
   getUnder5Weight,
-  type LegacyMoralWeights,
+  getWeight,
+  type MoralWeights,
 } from "./moral-weights";
 
 describe("Moral Weights", () => {
   describe("DEFAULT_MORAL_WEIGHTS", () => {
-    it("has reasonable default values for intervention-specific weights", () => {
-      expect(DEFAULT_MORAL_WEIGHTS.under5Malaria).toBeCloseTo(116.25, 1);
-      expect(DEFAULT_MORAL_WEIGHTS.under5VitaminA).toBeCloseTo(118.73, 1);
-      expect(DEFAULT_MORAL_WEIGHTS.under5Vaccines).toBeCloseTo(116.25, 1);
-      expect(DEFAULT_MORAL_WEIGHTS.age5PlusMalaria).toBeCloseTo(73.19, 1);
-      expect(DEFAULT_MORAL_WEIGHTS.age5to14).toBeCloseTo(134, 0);
-      expect(DEFAULT_MORAL_WEIGHTS.age15to49).toBeCloseTo(104, 0);
-      expect(DEFAULT_MORAL_WEIGHTS.age50to74).toBeCloseTo(42, 0);
+    it("has reasonable default values for age-based weights", () => {
+      expect(DEFAULT_MORAL_WEIGHTS.under5).toBe(117);
+      expect(DEFAULT_MORAL_WEIGHTS.age5to14).toBe(130);
+      expect(DEFAULT_MORAL_WEIGHTS.age15to49).toBe(95);
+      expect(DEFAULT_MORAL_WEIGHTS.age50plus).toBe(45);
     });
 
     it("has GiveWell's 4% discount rate", () => {
       expect(DEFAULT_MORAL_WEIGHTS.discountRate).toBe(0.04);
     });
 
-    it("has higher weight for younger ages in malaria context", () => {
-      expect(DEFAULT_MORAL_WEIGHTS.under5Malaria).toBeGreaterThan(
-        DEFAULT_MORAL_WEIGHTS.age5PlusMalaria
+    it("has higher weight for younger ages", () => {
+      expect(DEFAULT_MORAL_WEIGHTS.age5to14).toBeGreaterThan(
+        DEFAULT_MORAL_WEIGHTS.age50plus
       );
     });
 
@@ -35,8 +32,8 @@ describe("Moral Weights", () => {
       expect(DEFAULT_MORAL_WEIGHTS.mode).toBe("manual");
     });
 
-    it("has consumption multiplier of 1", () => {
-      expect(DEFAULT_MORAL_WEIGHTS.consumptionMultiplier).toBe(1.0);
+    it("has multiplier of 1", () => {
+      expect(DEFAULT_MORAL_WEIGHTS.multiplier).toBe(1.0);
     });
   });
 
@@ -59,101 +56,99 @@ describe("Moral Weights", () => {
         (p) => p.name === "Equal Lives"
       );
       expect(equalLives).toBeDefined();
-      expect(equalLives?.weights.under5Malaria).toBe(100);
-      expect(equalLives?.weights.age50to74).toBe(100);
+      expect(equalLives?.weights.under5).toBe(100);
+      expect(equalLives?.weights.age50plus).toBe(100);
+    });
+
+    it("Lower Discount Rate preset uses 2%", () => {
+      const lowerDiscount = MORAL_WEIGHT_PRESETS.find(
+        (p) => p.name === "Lower Discount Rate"
+      );
+      expect(lowerDiscount).toBeDefined();
+      expect(lowerDiscount?.weights.discountRate).toBe(0.02);
     });
   });
 
-  describe("toLegacyWeights", () => {
-    it("converts new format to legacy format", () => {
-      const legacy = toLegacyWeights(DEFAULT_MORAL_WEIGHTS);
-      // Average of 3 under-5 weights
-      const expectedUnder5 = (116.25 + 118.73 + 116.25) / 3;
-      expect(legacy.under5).toBeCloseTo(expectedUnder5, 1);
-      expect(legacy.age5to14).toBe(134);
-      // Average of 15-49 and 50-74
-      expect(legacy.age15plus).toBeCloseTo((104 + 42) / 2, 1);
-      expect(legacy.discountRate).toBe(0.04);
+  describe("getWeight", () => {
+    it("returns base weight in manual mode", () => {
+      expect(getWeight(DEFAULT_MORAL_WEIGHTS, "under5")).toBe(117);
+      expect(getWeight(DEFAULT_MORAL_WEIGHTS, "age5to14")).toBe(130);
+      expect(getWeight(DEFAULT_MORAL_WEIGHTS, "age15to49")).toBe(95);
+      expect(getWeight(DEFAULT_MORAL_WEIGHTS, "age50plus")).toBe(45);
     });
 
-    it("applies consumption multiplier in simple mode", () => {
-      const simpleWeights = {
+    it("applies multiplier in simple mode", () => {
+      const simpleWeights: MoralWeights = {
         ...DEFAULT_MORAL_WEIGHTS,
-        mode: "simple" as const,
-        consumptionMultiplier: 2.0,
+        mode: "simple",
+        multiplier: 2.0,
       };
-      const legacy = toLegacyWeights(simpleWeights);
-      expect(legacy.under5).toBeCloseTo(116.25 * 2, 1);
-      expect(legacy.age5to14).toBeCloseTo(95 * 2, 1);
-      expect(legacy.age15plus).toBeCloseTo(73.19 * 2, 1);
+      expect(getWeight(simpleWeights, "under5")).toBe(234);
+      expect(getWeight(simpleWeights, "age5to14")).toBe(260);
     });
   });
 
   describe("getUnder5Weight", () => {
-    it("returns correct weight for each intervention", () => {
-      expect(getUnder5Weight(DEFAULT_MORAL_WEIGHTS, "malaria")).toBe(116.25);
-      expect(getUnder5Weight(DEFAULT_MORAL_WEIGHTS, "vitaminA")).toBe(118.73);
-      expect(getUnder5Weight(DEFAULT_MORAL_WEIGHTS, "vaccines")).toBe(116.25);
-      expect(getUnder5Weight(DEFAULT_MORAL_WEIGHTS, "cash")).toBe(116.25);
+    it("returns under5 weight", () => {
+      expect(getUnder5Weight(DEFAULT_MORAL_WEIGHTS)).toBe(117);
     });
 
     it("applies multiplier in simple mode", () => {
-      const simpleWeights = {
+      const simpleWeights: MoralWeights = {
         ...DEFAULT_MORAL_WEIGHTS,
-        mode: "simple" as const,
-        consumptionMultiplier: 1.5,
+        mode: "simple",
+        multiplier: 1.5,
       };
-      expect(getUnder5Weight(simpleWeights, "malaria")).toBeCloseTo(116.25 * 1.5, 1);
+      expect(getUnder5Weight(simpleWeights)).toBeCloseTo(117 * 1.5, 1);
     });
   });
 
   describe("getAge5PlusMoralWeight", () => {
-    it("returns age5PlusMalaria weight for new format", () => {
-      const result = getAge5PlusMoralWeight(DEFAULT_MORAL_WEIGHTS);
-      expect(result).toBeCloseTo(73.19, 1);
+    it("returns weighted average of age 5+ groups", () => {
+      // Weights: 5-14 (30%), 15-49 (50%), 50+ (20%)
+      // 130 * 0.3 + 95 * 0.5 + 45 * 0.2 = 39 + 47.5 + 9 = 95.5
+      expect(getAge5PlusMoralWeight(DEFAULT_MORAL_WEIGHTS)).toBeCloseTo(95.5, 1);
     });
 
-    it("returns average of 5-14 and 15+ for legacy format", () => {
-      const legacyWeights: LegacyMoralWeights = {
-        under5: 116.25,
-        age5to14: 95,
-        age15plus: 73.19,
-        discountRate: 0.04,
-      };
-      const result = getAge5PlusMoralWeight(legacyWeights);
-      expect(result).toBeCloseTo((95 + 73.19) / 2, 1);
-    });
-
-    it("returns correct value for equal weights in legacy format", () => {
-      const equalWeights: LegacyMoralWeights = {
-        under5: 100,
+    it("returns 100 for equal weights", () => {
+      const equalWeights: MoralWeights = {
+        ...DEFAULT_MORAL_WEIGHTS,
         age5to14: 100,
-        age15plus: 100,
-        discountRate: 0.04,
+        age15to49: 100,
+        age50plus: 100,
       };
       expect(getAge5PlusMoralWeight(equalWeights)).toBe(100);
+    });
+
+    it("applies multiplier in simple mode", () => {
+      const simpleWeights: MoralWeights = {
+        ...DEFAULT_MORAL_WEIGHTS,
+        mode: "simple",
+        multiplier: 2.0,
+      };
+      expect(getAge5PlusMoralWeight(simpleWeights)).toBeCloseTo(95.5 * 2, 1);
     });
   });
 
   describe("scaleMoralWeight", () => {
     it("scales proportionally to custom weight", () => {
-      const original = 116.25;
-      const customUnder5 = 232.5; // 2x the default
+      const original = 117;
+      const customUnder5 = 234; // 2x the default
       const result = scaleMoralWeight(original, customUnder5);
-      expect(result).toBeCloseTo(232.5, 1); // Should be 2x
+      expect(result).toBeCloseTo(234, 1); // Should be 2x
     });
 
     it("returns original when custom matches default reference", () => {
-      const original = 116.25;
-      const result = scaleMoralWeight(original, 116.25);
+      const original = 117;
+      const result = scaleMoralWeight(original, 117);
       expect(result).toBeCloseTo(original, 1);
     });
 
     it("scales down when custom weight is lower", () => {
-      const original = 116.25;
-      const customUnder5 = 58.125; // 0.5x the default
+      const original = 117;
+      const customUnder5 = 58.5; // 0.5x the default
       const result = scaleMoralWeight(original, customUnder5);
-      expect(result).toBeCloseTo(58.125, 1); // Should be 0.5x
+      expect(result).toBeCloseTo(58.5, 1); // Should be 0.5x
     });
   });
 });

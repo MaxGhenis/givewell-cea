@@ -20,15 +20,15 @@ describe("applyMoralWeights", () => {
     it("applies moral weights to AMF inputs", () => {
       const inputs = getDefaultInputs("amf");
       const customWeights = createCustomWeights({
-        under5Malaria: 150,
-        age5PlusMalaria: 100,
+        under5: 150,
       });
 
       const result = applyMoralWeights(inputs, customWeights);
       expect(result.type).toBe("amf");
       if (result.type === "amf") {
         expect(result.inputs.moralWeightUnder5).toBe(150);
-        expect(result.inputs.moralWeight5Plus).toBe(100);
+        // age5Plus is weighted average: 130*0.3 + 95*0.5 + 45*0.2 = 95.5
+        expect(result.inputs.moralWeight5Plus).toBeCloseTo(95.5, 1);
       }
     });
 
@@ -40,16 +40,15 @@ describe("applyMoralWeights", () => {
         applyMoralWeights(inputs, DEFAULT_MORAL_WEIGHTS)
       );
 
-      // Calculate with doubled malaria weights
+      // Calculate with doubled under5 weight
       const customWeights = createCustomWeights({
-        under5Malaria: DEFAULT_MORAL_WEIGHTS.under5Malaria * 2,
-        age5PlusMalaria: DEFAULT_MORAL_WEIGHTS.age5PlusMalaria * 2,
+        under5: DEFAULT_MORAL_WEIGHTS.under5 * 2,
       });
       const customResult = calculateCharity(
         applyMoralWeights(inputs, customWeights)
       );
 
-      // Cost-effectiveness should roughly double
+      // Cost-effectiveness should increase (though not necessarily double due to other factors)
       expect(customResult.finalXBenchmark).toBeGreaterThan(
         defaultResult.finalXBenchmark * 1.5
       );
@@ -60,7 +59,7 @@ describe("applyMoralWeights", () => {
     it("applies moral weights to MC inputs", () => {
       const inputs = getDefaultInputs("malaria-consortium");
       const customWeights = createCustomWeights({
-        under5Malaria: 200,
+        under5: 200,
       });
 
       const result = applyMoralWeights(inputs, customWeights);
@@ -72,10 +71,10 @@ describe("applyMoralWeights", () => {
   });
 
   describe("Helen Keller", () => {
-    it("applies moral weights to HK inputs using vitamin A weight", () => {
+    it("applies moral weights to HK inputs", () => {
       const inputs = getDefaultInputs("helen-keller");
       const customWeights = createCustomWeights({
-        under5VitaminA: 130,
+        under5: 130,
       });
 
       const result = applyMoralWeights(inputs, customWeights);
@@ -87,10 +86,10 @@ describe("applyMoralWeights", () => {
   });
 
   describe("New Incentives", () => {
-    it("applies moral weights to NI inputs using vaccine weight", () => {
+    it("applies moral weights to NI inputs", () => {
       const inputs = getDefaultInputs("new-incentives");
       const customWeights = createCustomWeights({
-        under5Vaccines: 140,
+        under5: 140,
       });
 
       const result = applyMoralWeights(inputs, customWeights);
@@ -102,16 +101,18 @@ describe("applyMoralWeights", () => {
   });
 
   describe("GiveDirectly", () => {
-    it("applies discount rate to GD inputs", () => {
+    it("applies discount rate and moral weight to GD inputs", () => {
       const inputs = getDefaultInputs("givedirectly");
       const customWeights = createCustomWeights({
         discountRate: 0.02,
+        under5: 150,
       });
 
       const result = applyMoralWeights(inputs, customWeights);
       expect(result.type).toBe("givedirectly");
       if (result.type === "givedirectly") {
         expect(result.inputs.discountRate).toBe(0.02);
+        expect(result.inputs.moralWeightUnder5).toBe(150);
       }
     });
   });
@@ -135,9 +136,7 @@ describe("applyMoralWeights", () => {
     it("preserves non-moral-weight inputs", () => {
       const types = ["amf", "malaria-consortium", "helen-keller", "new-incentives"] as const;
       const customWeights = createCustomWeights({
-        under5Malaria: 150,
-        under5VitaminA: 150,
-        under5Vaccines: 150,
+        under5: 150,
       });
 
       for (const type of types) {
@@ -153,18 +152,35 @@ describe("applyMoralWeights", () => {
   });
 
   describe("Simple mode", () => {
-    it("applies consumption multiplier in simple mode", () => {
+    it("applies multiplier in simple mode", () => {
       const inputs = getDefaultInputs("amf");
       const simpleWeights: MoralWeights = {
         ...DEFAULT_MORAL_WEIGHTS,
         mode: "simple",
-        consumptionMultiplier: 2.0,
+        multiplier: 2.0,
       };
 
       const result = applyMoralWeights(inputs, simpleWeights);
       if (result.type === "amf") {
-        // Should apply 2x multiplier to default malaria weight
-        expect(result.inputs.moralWeightUnder5).toBeCloseTo(116.25 * 2, 1);
+        // Should apply 2x multiplier to default under5 weight (117)
+        expect(result.inputs.moralWeightUnder5).toBeCloseTo(117 * 2, 1);
+      }
+    });
+  });
+
+  describe("Age 5+ weighted average", () => {
+    it("calculates correct weighted average for ages 5+", () => {
+      const inputs = getDefaultInputs("amf");
+      const customWeights = createCustomWeights({
+        age5to14: 100,
+        age15to49: 80,
+        age50plus: 40,
+      });
+
+      const result = applyMoralWeights(inputs, customWeights);
+      if (result.type === "amf") {
+        // Weighted avg: 100*0.3 + 80*0.5 + 40*0.2 = 30 + 40 + 8 = 78
+        expect(result.inputs.moralWeight5Plus).toBeCloseTo(78, 1);
       }
     });
   });
