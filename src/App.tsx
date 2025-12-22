@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   CHARITY_CONFIGS,
   calculateCharity,
@@ -43,10 +43,6 @@ import {
   type GDCountry,
   type DWVariant,
 } from "./lib/models";
-import {
-  runCharityMonteCarlo,
-  type MonteCarloResults,
-} from "./lib/uncertainty-charity";
 import { CalculationBreakdown } from "./components/CalculationBreakdown";
 import "./App.css";
 
@@ -58,70 +54,6 @@ function formatNumber(n: number, decimals = 1): string {
 
 function formatCurrency(n: number, decimals = 1): string {
   return `$${formatNumber(n, decimals)}`;
-}
-
-interface UncertaintyToggleProps {
-  showUncertainty: boolean;
-  isRunningMC: boolean;
-  onToggle: (show: boolean) => void;
-}
-
-function UncertaintyToggle({ showUncertainty, isRunningMC, onToggle }: UncertaintyToggleProps) {
-  const [showExplanation, setShowExplanation] = useState(false);
-
-  return (
-    <div className="uncertainty-toggle">
-      <label className="toggle-label">
-        <input
-          type="checkbox"
-          checked={showUncertainty}
-          onChange={(e) => onToggle(e.target.checked)}
-        />
-        <span className="toggle-text">
-          Show uncertainty (90% CI)
-          {isRunningMC && <span className="loading-indicator"> ...</span>}
-        </span>
-      </label>
-      <button
-        className="info-btn"
-        onClick={() => setShowExplanation(!showExplanation)}
-        title="How confidence intervals are calculated"
-      >
-        ?
-      </button>
-      {showExplanation && (
-        <div className="uncertainty-explanation">
-          <p>
-            <strong>Monte Carlo Simulation</strong>: We run 500 simulations, randomly
-            sampling each parameter to generate a distribution of possible
-            cost-effectiveness values.
-          </p>
-          <p>
-            <strong>⚠️ Illustrative Only</strong>: The uncertainty ranges used here
-            (±20-40% depending on parameter type) are <em>not empirically estimated</em>.
-            They're placeholder values to demonstrate how uncertainty propagates
-            through the model.
-          </p>
-          <p>
-            <strong>GiveWell's Approach</strong>: GiveWell uses 25th/75th percentiles
-            based on subjective judgment incorporating evidence quality—not the
-            90% CIs shown here. See their{" "}
-            <a
-              href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness/uncertainty-optimizers-curse"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              uncertainty methodology
-            </a>.
-          </p>
-          <p className="note">
-            To our knowledge, no one has rigorously estimated parameter-specific
-            distributions for GiveWell's CEA inputs.
-          </p>
-        </div>
-      )}
-    </div>
-  );
 }
 
 interface MoralWeightsPanelProps {
@@ -293,7 +225,6 @@ interface CharityCardProps {
   config: (typeof CHARITY_CONFIGS)[number];
   charityInputs: CharityInputs;
   results: UnifiedResults;
-  uncertainty: MonteCarloResults | null;
   isExpanded: boolean;
   onToggleExpand: () => void;
   onInputChange: (inputs: CharityInputs) => void;
@@ -324,7 +255,6 @@ function CharityCard({
   config,
   charityInputs,
   results,
-  uncertainty,
   isExpanded,
   onToggleExpand,
   onInputChange,
@@ -333,12 +263,6 @@ function CharityCard({
   maxXBenchmark,
 }: CharityCardProps) {
   const barWidth = (results.finalXBenchmark / maxXBenchmark) * 100;
-  const uncertaintyBarLow = uncertainty
-    ? (uncertainty.percentile10 / maxXBenchmark) * 100
-    : barWidth;
-  const uncertaintyBarHigh = uncertainty
-    ? (uncertainty.percentile90 / maxXBenchmark) * 100
-    : barWidth;
 
   // Get grant size for display in labels
   const grantSize = charityInputs.inputs.grantSize;
@@ -399,24 +323,9 @@ function CharityCard({
             {results.finalXBenchmark.toFixed(1)}×
           </span>
           <span className="metric-label">cost-effectiveness</span>
-          {uncertainty && (
-            <span className="uncertainty-range">
-              90% CI: {uncertainty.percentile10.toFixed(1)}× – {uncertainty.percentile90.toFixed(1)}×
-            </span>
-          )}
         </div>
 
         <div className="metric-bar-container">
-          {uncertainty && (
-            <div
-              className="uncertainty-bar"
-              style={{
-                left: `${uncertaintyBarLow}%`,
-                width: `${uncertaintyBarHigh - uncertaintyBarLow}%`,
-                backgroundColor: config.color,
-              }}
-            />
-          )}
           <div
             className="metric-bar"
             style={{ width: `${barWidth}%`, backgroundColor: config.color }}
@@ -487,14 +396,6 @@ function App() {
   const [moralWeights, setMoralWeights] = useState<MoralWeights>({
     ...DEFAULT_MORAL_WEIGHTS,
   });
-
-  // Uncertainty analysis state
-  const [showUncertainty, setShowUncertainty] = useState(false);
-  const [uncertaintyResults, setUncertaintyResults] = useState<Record<
-    CharityType,
-    MonteCarloResults
-  > | null>(null);
-  const [isRunningMC, setIsRunningMC] = useState(false);
 
   // Initialize all charity inputs with defaults
   const [charityInputs, setCharityInputs] = useState<Record<CharityType, CharityInputs>>(() => {
@@ -617,41 +518,6 @@ function App() {
     );
   }, [charityResults]);
 
-  // Run Monte Carlo simulation when uncertainty is enabled
-  useEffect(() => {
-    if (!showUncertainty) {
-      return;
-    }
-
-    // Use nested timeouts to allow UI updates between state changes
-    const loadingTimeoutId = setTimeout(() => {
-      setIsRunningMC(true);
-    }, 0);
-
-    const computeTimeoutId = setTimeout(() => {
-      const results: Record<CharityType, MonteCarloResults> = {} as Record<
-        CharityType,
-        MonteCarloResults
-      >;
-
-      for (const config of CHARITY_CONFIGS) {
-        const inputsWithWeights = applyMoralWeights(
-          charityInputs[config.type],
-          moralWeights
-        );
-        results[config.type] = runCharityMonteCarlo(inputsWithWeights, 500);
-      }
-
-      setUncertaintyResults(results);
-      setIsRunningMC(false);
-    }, 50);
-
-    return () => {
-      clearTimeout(loadingTimeoutId);
-      clearTimeout(computeTimeoutId);
-    };
-  }, [showUncertainty, charityInputs, moralWeights]);
-
   return (
     <div className="app">
       <div className="grain-overlay" />
@@ -686,11 +552,6 @@ function App() {
               Cost-effectiveness expressed as multiples of GiveWell's benchmark
               (unconditional cash transfers). Click + to expand and adjust parameters.
             </p>
-            <UncertaintyToggle
-            showUncertainty={showUncertainty}
-            isRunningMC={isRunningMC}
-            onToggle={setShowUncertainty}
-          />
           </div>
 
           <div className="charities-grid">
@@ -700,7 +561,6 @@ function App() {
                 config={config}
                 charityInputs={charityInputs[config.type]}
                 results={charityResults[config.type]}
-                uncertainty={uncertaintyResults?.[config.type] ?? null}
                 isExpanded={expandedCharity === config.type}
                 onToggleExpand={() =>
                   setExpandedCharity(
