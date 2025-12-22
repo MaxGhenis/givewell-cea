@@ -349,14 +349,15 @@ function App() {
   // Run Monte Carlo simulation when uncertainty is enabled
   useEffect(() => {
     if (!showUncertainty) {
-      setUncertaintyResults(null);
       return;
     }
 
-    setIsRunningMC(true);
+    // Use nested timeouts to allow UI updates between state changes
+    const loadingTimeoutId = setTimeout(() => {
+      setIsRunningMC(true);
+    }, 0);
 
-    // Use setTimeout to allow UI to update before heavy computation
-    const timeoutId = setTimeout(() => {
+    const computeTimeoutId = setTimeout(() => {
       const results: Record<CharityType, MonteCarloResults> = {} as Record<
         CharityType,
         MonteCarloResults
@@ -374,7 +375,10 @@ function App() {
       setIsRunningMC(false);
     }, 50);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(loadingTimeoutId);
+      clearTimeout(computeTimeoutId);
+    };
   }, [showUncertainty, charityInputs, moralWeights]);
 
   return (

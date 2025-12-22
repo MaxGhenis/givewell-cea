@@ -127,7 +127,7 @@ describe("Uncertainty Analysis", () => {
       const result = runMonteCarloSimulation(
         100,
         () => ({}),
-        (_) => (Math.random() > 0.5 ? 10 : NaN)
+        () => (Math.random() > 0.5 ? 10 : NaN)
       );
       // All samples should be valid (10)
       expect(result.samples.every((s) => s === 10)).toBe(true);

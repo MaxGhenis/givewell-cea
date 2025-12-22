@@ -159,7 +159,7 @@ describe("GiveDirectly Cost-Effectiveness Model", () => {
     });
 
     it("all countries should be between 1x and 6x benchmark", () => {
-      Object.entries(testCases).forEach(([_country, { inputs }]) => {
+      Object.values(testCases).forEach(({ inputs }) => {
         const result = calculateGiveDirectly(inputs);
         expect(result.xBenchmark).toBeGreaterThan(1);
         expect(result.xBenchmark).toBeLessThan(6);
