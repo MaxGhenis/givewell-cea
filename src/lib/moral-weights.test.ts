@@ -14,6 +14,10 @@ describe("Moral Weights", () => {
       expect(DEFAULT_MORAL_WEIGHTS.age15plus).toBeCloseTo(73.19, 1);
     });
 
+    it("has GiveWell's 4% discount rate", () => {
+      expect(DEFAULT_MORAL_WEIGHTS.discountRate).toBe(0.04);
+    });
+
     it("has higher weight for younger ages", () => {
       expect(DEFAULT_MORAL_WEIGHTS.under5).toBeGreaterThan(
         DEFAULT_MORAL_WEIGHTS.age5to14
@@ -25,31 +29,17 @@ describe("Moral Weights", () => {
   });
 
   describe("MORAL_WEIGHT_PRESETS", () => {
-    it("includes GiveWell Default preset", () => {
+    it("includes only GiveWell Default preset", () => {
+      expect(MORAL_WEIGHT_PRESETS).toHaveLength(1);
+      expect(MORAL_WEIGHT_PRESETS[0].name).toBe("GiveWell Default");
+    });
+
+    it("GiveWell Default preset matches DEFAULT_MORAL_WEIGHTS", () => {
       const giveWellPreset = MORAL_WEIGHT_PRESETS.find(
         (p) => p.name === "GiveWell Default"
       );
       expect(giveWellPreset).toBeDefined();
       expect(giveWellPreset?.weights).toEqual(DEFAULT_MORAL_WEIGHTS);
-    });
-
-    it("includes Equal Value preset with same weights for all ages", () => {
-      const equalPreset = MORAL_WEIGHT_PRESETS.find(
-        (p) => p.name === "Equal Value"
-      );
-      expect(equalPreset).toBeDefined();
-      expect(equalPreset?.weights.under5).toBe(equalPreset?.weights.age5to14);
-      expect(equalPreset?.weights.age5to14).toBe(equalPreset?.weights.age15plus);
-    });
-
-    it("includes Child-Focused preset with higher under-5 weight", () => {
-      const childFocused = MORAL_WEIGHT_PRESETS.find(
-        (p) => p.name === "Child-Focused"
-      );
-      expect(childFocused).toBeDefined();
-      expect(childFocused?.weights.under5).toBeGreaterThan(
-        childFocused?.weights.age5to14!
-      );
     });
   });
 
@@ -62,7 +52,7 @@ describe("Moral Weights", () => {
     });
 
     it("returns correct value for equal weights", () => {
-      const equalWeights = { under5: 100, age5to14: 100, age15plus: 100 };
+      const equalWeights = { under5: 100, age5to14: 100, age15plus: 100, discountRate: 0.04 };
       expect(getAge5PlusMoralWeight(equalWeights)).toBe(100);
     });
   });
