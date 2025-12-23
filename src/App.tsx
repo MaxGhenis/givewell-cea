@@ -45,7 +45,6 @@ import {
 } from "./lib/models";
 import { CalculationBreakdown } from "./components/CalculationBreakdown";
 import { CountryComparison } from "./components/CountryComparison";
-import { ParameterSummary } from "./components/ParameterSummary";
 import "./App.css";
 
 function formatNumber(n: number, decimals = 1): string {
@@ -382,12 +381,7 @@ function CharityCard({
         <div className="charity-params" onClick={(e) => e.stopPropagation()}>
           <p className="param-description">{config.description}</p>
 
-          <ParameterSummary
-            charityInputs={charityInputs}
-            charityName={config.name}
-          />
-
-          <p className="edit-hint" style={{ marginTop: "1.5rem" }}>
+          <p className="edit-hint">
             Click any highlighted value below to edit it.
           </p>
           <CalculationBreakdown
