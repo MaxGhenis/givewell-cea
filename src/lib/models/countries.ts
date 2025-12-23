@@ -17,6 +17,7 @@ import type { HelenKellerInputs } from "./helen-keller";
 import type { NewIncentivesInputs } from "./new-incentives";
 import type { GiveDirectlyInputs } from "./givedirectly";
 import type { DewormingInputs } from "./deworming";
+import type { DewormingEvidenceActionInputs } from "./deworming-evidence-action";
 
 // ============================================================================
 // AMF Country Data
@@ -731,4 +732,178 @@ export function getGDInputsForCountry(country: GDCountry, grantSize: number = 1_
 
 export function getDWInputsForVariant(variant: DWVariant, grantSize: number = 1_000_000): DewormingInputs {
   return { ...DW_VARIANT_PARAMS[variant], grantSize };
+}
+
+// ============================================================================
+// Deworming (Evidence Action / Deworm the World) Country Data
+// ============================================================================
+
+export const DEA_COUNTRIES = [
+  "kenya",
+  "ajk_pakistan",
+  "balochistan_pakistan",
+  "gilgit_baltistan_pakistan",
+  "islamabad_pakistan",
+  "khyber_pakhtunkhwa_pakistan",
+  "punjab_pakistan",
+  "sindh_pakistan",
+  "lagos_nigeria",
+  "oyo_nigeria",
+  "ogun_nigeria",
+  "rivers_nigeria",
+  "cross_river_nigeria",
+] as const;
+export type DEACountry = (typeof DEA_COUNTRIES)[number];
+
+export const DEA_COUNTRY_NAMES: Record<DEACountry, string> = {
+  kenya: "Kenya",
+  ajk_pakistan: "Azad Jammu and Kashmir, Pakistan",
+  balochistan_pakistan: "Balochistan, Pakistan",
+  gilgit_baltistan_pakistan: "Gilgit-Baltistan, Pakistan",
+  islamabad_pakistan: "Islamabad Capital Territory, Pakistan",
+  khyber_pakhtunkhwa_pakistan: "Khyber Pakhtunkhwa, Pakistan",
+  punjab_pakistan: "Punjab, Pakistan",
+  sindh_pakistan: "Sindh, Pakistan",
+  lagos_nigeria: "Lagos, Nigeria",
+  oyo_nigeria: "Oyo, Nigeria",
+  ogun_nigeria: "Ogun, Nigeria",
+  rivers_nigeria: "Rivers, Nigeria",
+  cross_river_nigeria: "Cross River, Nigeria",
+};
+
+export const DEA_COUNTRY_PARAMS: Record<DEACountry, Omit<DewormingEvidenceActionInputs, "grantSize">> = {
+  kenya: {
+    percentageCostsDtW: 0.6082843,
+    costPerChildPerYear: 0.64757,
+    wormBurdenAdjustment: 0.20523514303046,
+    pvBenefitsLnConsumption: 0.04233400171,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.91,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.2557848955,
+  },
+  ajk_pakistan: {
+    percentageCostsDtW: 0.4014779,
+    costPerChildPerYear: 0.74247,
+    wormBurdenAdjustment: 0.0355752,
+    pvBenefitsLnConsumption: 0.00733812229,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.91,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.1579093422,
+  },
+  balochistan_pakistan: {
+    percentageCostsDtW: 0.4014779,
+    costPerChildPerYear: 0.74247,
+    wormBurdenAdjustment: 0.0128676,
+    pvBenefitsLnConsumption: 0.002654209179,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.91,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.05848865867,
+  },
+  gilgit_baltistan_pakistan: {
+    percentageCostsDtW: 0.4014779,
+    costPerChildPerYear: 0.74247,
+    wormBurdenAdjustment: 0.1264055,
+    pvBenefitsLnConsumption: 0.02607375411,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.91,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.1983918901,
+  },
+  islamabad_pakistan: {
+    percentageCostsDtW: 0.4014779,
+    costPerChildPerYear: 0.74247,
+    wormBurdenAdjustment: 0.0075692,
+    pvBenefitsLnConsumption: 0.00156130437,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.91,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: -0.05054174521,
+  },
+  khyber_pakhtunkhwa_pakistan: {
+    percentageCostsDtW: 0.4014779,
+    costPerChildPerYear: 0.74247,
+    wormBurdenAdjustment: 0.0531569,
+    pvBenefitsLnConsumption: 0.01096471229,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.91,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.1765432645,
+  },
+  punjab_pakistan: {
+    percentageCostsDtW: 0.4014779,
+    costPerChildPerYear: 0.74247,
+    wormBurdenAdjustment: 0.0075692,
+    pvBenefitsLnConsumption: 0.00156130437,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.91,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: -0.05054174521,
+  },
+  sindh_pakistan: {
+    percentageCostsDtW: 0.4014779,
+    costPerChildPerYear: 0.74247,
+    wormBurdenAdjustment: 0.0128676,
+    pvBenefitsLnConsumption: 0.002654209179,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.91,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.05848865867,
+  },
+  lagos_nigeria: {
+    percentageCostsDtW: 0.6735345,
+    costPerChildPerYear: 0.75506,
+    wormBurdenAdjustment: 0.0700532622286556,
+    pvBenefitsLnConsumption: 0.01444993718,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.87,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.1612619753,
+  },
+  oyo_nigeria: {
+    percentageCostsDtW: 0.6084396,
+    costPerChildPerYear: 0.78975,
+    wormBurdenAdjustment: 0.110769485470474,
+    pvBenefitsLnConsumption: 0.02284850206,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.87,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.267543532,
+  },
+  ogun_nigeria: {
+    percentageCostsDtW: 0.6270353204610798,
+    costPerChildPerYear: 1.518246103,
+    wormBurdenAdjustment: 0.205235143030462,
+    pvBenefitsLnConsumption: 0.04233400171,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.87,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.2486821258,
+  },
+  rivers_nigeria: {
+    percentageCostsDtW: 0.6220757005833413,
+    costPerChildPerYear: 0.7480077174,
+    wormBurdenAdjustment: 0.0832610819812009,
+    pvBenefitsLnConsumption: 0.01717432373,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.87,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.2114001128,
+  },
+  cross_river_nigeria: {
+    percentageCostsDtW: 0.589401613589314,
+    costPerChildPerYear: 1.16122759803812,
+    wormBurdenAdjustment: 0.123383074085492,
+    pvBenefitsLnConsumption: 0.02545031612,
+    valueLnConsumptionUnit: 1.442695041,
+    charityAdjustmentFactor: 0.87,
+    interventionAdjustmentFactor: 1.073,
+    leverageFungingPercentChange: 0.2456553871,
+  },
+};
+
+export function getDEAInputsForCountry(country: DEACountry, grantSize: number = 100_000): DewormingEvidenceActionInputs {
+  return { ...DEA_COUNTRY_PARAMS[country], grantSize };
 }
