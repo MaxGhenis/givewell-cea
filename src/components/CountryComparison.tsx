@@ -5,6 +5,10 @@
  * Shows side-by-side parameter values and highlights differences
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// This component handles heterogeneous country/variant types across charities,
+// making strict typing impractical without significant type gymnastics.
+
 import { useState, useMemo } from "react";
 import type { CharityType } from "../lib/models";
 import {
