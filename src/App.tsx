@@ -231,8 +231,8 @@ interface CharityCardProps {
   onInputChange: (inputs: CharityInputs) => void;
   onCountryChange: (country: string) => void;
   selectedCountry: string;
-  maxXBenchmark: number;
   onCompareCountries: () => void;
+  allCountryResults: { country: string; label: string; xBenchmark: number }[];
 }
 
 // Get country options for a charity type
@@ -262,16 +262,27 @@ function CharityCard({
   onInputChange,
   onCountryChange,
   selectedCountry,
-  maxXBenchmark,
   onCompareCountries,
+  allCountryResults,
 }: CharityCardProps) {
-  const barWidth = (results.finalXBenchmark / maxXBenchmark) * 100;
-
   // Get grant size for display in labels
   const grantSize = charityInputs.inputs.grantSize;
   const grantLabel = grantSize >= 1_000_000
     ? `$${(grantSize / 1_000_000).toFixed(grantSize % 1_000_000 === 0 ? 0 : 1)}M`
     : `$${(grantSize / 1_000).toFixed(0)}K`;
+
+  // Calculate range stats
+  const sortedResults = [...allCountryResults].sort((a, b) => a.xBenchmark - b.xBenchmark);
+  const minX = sortedResults[0]?.xBenchmark || 0;
+  const maxX = sortedResults[sortedResults.length - 1]?.xBenchmark || 0;
+  const medianX = sortedResults[Math.floor(sortedResults.length / 2)]?.xBenchmark || 0;
+
+  // Scale for the strip plot (0-100%)
+  const plotMin = Math.max(0, minX - (maxX - minX) * 0.1);
+  const plotMax = maxX + (maxX - minX) * 0.1;
+  const plotRange = plotMax - plotMin || 1;
+
+  const getPosition = (x: number) => ((x - plotMin) / plotRange) * 100;
 
   return (
     <div className="charity-card">
@@ -290,7 +301,6 @@ function CharityCard({
                 alt={`${config.name} logo`}
                 className="charity-logo"
                 onError={(e) => {
-                  // Fallback to abbreviation if logo fails to load
                   e.currentTarget.style.display = "none";
                   const fallback = e.currentTarget.nextElementSibling as HTMLElement;
                   if (fallback) fallback.style.display = "flex";
@@ -310,25 +320,15 @@ function CharityCard({
           <div className="charity-name-row">
             <h3>{config.name}</h3>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <select
-                className="country-selector"
-                value={selectedCountry}
-                onChange={(e) => onCountryChange(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {getCountryOptions(config.type).map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
               <button
                 className="compare-countries-btn"
                 onClick={(e) => {
                   e.stopPropagation();
                   onCompareCountries();
                 }}
-                title="Compare countries"
+                title="Compare all locations"
               >
-                Compare
+                {allCountryResults.length} locations
               </button>
             </div>
           </div>
@@ -339,18 +339,78 @@ function CharityCard({
       </div>
 
       <div className="charity-metrics">
+        {/* Range display */}
+        <div className="range-section">
+          <div className="range-header">
+            <span className="range-label">Cost-effectiveness range</span>
+            <span className="range-stats">
+              {minX.toFixed(1)}× – {maxX.toFixed(1)}× (median: {medianX.toFixed(1)}×)
+            </span>
+          </div>
+
+          {/* Strip plot showing all countries */}
+          <div className="range-plot">
+            {/* Range bar background */}
+            <div
+              className="range-bar"
+              style={{
+                left: `${getPosition(minX)}%`,
+                width: `${getPosition(maxX) - getPosition(minX)}%`,
+                backgroundColor: config.color,
+              }}
+            />
+
+            {/* Median line */}
+            <div
+              className="range-median"
+              style={{ left: `${getPosition(medianX)}%` }}
+            />
+
+            {/* Individual country dots */}
+            {allCountryResults.map((cr) => (
+              <div
+                key={cr.country}
+                className={`range-dot ${cr.country === selectedCountry ? 'selected' : ''}`}
+                style={{
+                  left: `${getPosition(cr.xBenchmark)}%`,
+                  backgroundColor: config.color,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCountryChange(cr.country);
+                }}
+                title={`${cr.label}: ${cr.xBenchmark.toFixed(1)}×`}
+              >
+                <span className="range-dot-label">{cr.label}</span>
+              </div>
+            ))}
+
+            {/* Axis labels */}
+            <div className="range-axis">
+              <span>{plotMin.toFixed(1)}×</span>
+              <span>{plotMax.toFixed(1)}×</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Current selection details */}
         <div className="metric-primary">
           <span className="metric-value" style={{ color: config.color }}>
             {results.finalXBenchmark.toFixed(1)}×
           </span>
-          <span className="metric-label">cost-effectiveness</span>
-        </div>
-
-        <div className="metric-bar-container">
-          <div
-            className="metric-bar"
-            style={{ width: `${barWidth}%`, backgroundColor: config.color }}
-          />
+          <span className="metric-label">
+            <select
+              className="country-selector"
+              value={selectedCountry}
+              onChange={(e) => onCountryChange(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              style={{ marginLeft: '0.5rem' }}
+            >
+              {getCountryOptions(config.type).map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </span>
         </div>
 
         <div className="metrics-grid">
@@ -525,14 +585,42 @@ function App() {
     return results;
   }, [charityInputs, moralWeights]);
 
-  // Calculate max xBenchmark for bar scaling
-  const maxXBenchmark = useMemo(() => {
-    let max = 0;
-    for (const results of Object.values(charityResults)) {
-      if (results.finalXBenchmark > max) max = results.finalXBenchmark;
+  // Helper to compute all country results for a charity type
+  const getAllCountryResults = useCallback((charityType: CharityType): { country: string; label: string; xBenchmark: number }[] => {
+    const grantSize = charityInputs[charityType].inputs.grantSize;
+
+    const computeForCountry = (country: string, label: string, getInputsFn: (c: any, g: number) => any): { country: string; label: string; xBenchmark: number } => {
+      const inputs = getInputsFn(country, grantSize);
+      const charityInput = { type: charityType, inputs } as CharityInputs;
+      const withWeights = applyMoralWeights(charityInput, moralWeights);
+      const result = calculateCharity(withWeights);
+      return { country, label, xBenchmark: result.finalXBenchmark };
+    };
+
+    switch (charityType) {
+      case "amf":
+        return AMF_COUNTRIES.map(c => computeForCountry(c, AMF_COUNTRY_NAMES[c], getAMFInputsForCountry));
+      case "malaria-consortium":
+        return MC_COUNTRIES.map(c => computeForCountry(c, MC_COUNTRY_NAMES[c], getMCInputsForCountry));
+      case "helen-keller":
+        return HK_COUNTRIES.map(c => computeForCountry(c, HK_COUNTRY_NAMES[c], getHKInputsForCountry));
+      case "new-incentives":
+        return NI_COUNTRIES.map(c => computeForCountry(c, NI_COUNTRY_NAMES[c], getNIInputsForCountry));
+      case "givedirectly":
+        return GD_COUNTRIES.map(c => computeForCountry(c, GD_COUNTRY_NAMES[c], getGDInputsForCountry));
+      case "deworming":
+        return DW_VARIANTS.map(c => computeForCountry(c, DW_VARIANT_NAMES[c], getDWInputsForVariant));
     }
-    return max * 1.1; // Add 10% padding
-  }, [charityResults]);
+  }, [charityInputs, moralWeights]);
+
+  // Memoized all-country results for each charity
+  const allCountryResultsByCharity = useMemo(() => {
+    const results: Record<CharityType, { country: string; label: string; xBenchmark: number }[]> = {} as any;
+    for (const config of CHARITY_CONFIGS) {
+      results[config.type] = getAllCountryResults(config.type);
+    }
+    return results;
+  }, [getAllCountryResults]);
 
   // Sort charities by cost-effectiveness
   const sortedCharities = useMemo(() => {
@@ -595,8 +683,8 @@ function App() {
                 onInputChange={(inputs) => handleInputChange(config.type, inputs)}
                 onCountryChange={(country) => handleCountryChange(config.type, country)}
                 selectedCountry={selectedCountries[config.type]}
-                maxXBenchmark={maxXBenchmark}
                 onCompareCountries={() => setComparisonCharity(config.type)}
+                allCountryResults={allCountryResultsByCharity[config.type]}
               />
             ))}
           </div>
