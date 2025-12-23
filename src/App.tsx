@@ -44,6 +44,8 @@ import {
   type DWVariant,
 } from "./lib/models";
 import { CalculationBreakdown } from "./components/CalculationBreakdown";
+import { CountryComparison } from "./components/CountryComparison";
+import { ParameterSummary } from "./components/ParameterSummary";
 import "./App.css";
 
 function formatNumber(n: number, decimals = 1): string {
@@ -231,6 +233,8 @@ interface CharityCardProps {
   onCountryChange: (country: string) => void;
   selectedCountry: string;
   maxXBenchmark: number;
+  onCompareCountries: () => void;
+  moralWeights: MoralWeights;
 }
 
 // Get country options for a charity type
@@ -261,6 +265,8 @@ function CharityCard({
   onCountryChange,
   selectedCountry,
   maxXBenchmark,
+  onCompareCountries,
+  moralWeights,
 }: CharityCardProps) {
   const barWidth = (results.finalXBenchmark / maxXBenchmark) * 100;
 
@@ -306,16 +312,28 @@ function CharityCard({
           </a>
           <div className="charity-name-row">
             <h3>{config.name}</h3>
-            <select
-              className="country-selector"
-              value={selectedCountry}
-              onChange={(e) => onCountryChange(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {getCountryOptions(config.type).map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <select
+                className="country-selector"
+                value={selectedCountry}
+                onChange={(e) => onCountryChange(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {getCountryOptions(config.type).map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <button
+                className="compare-countries-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCompareCountries();
+                }}
+                title="Compare countries"
+              >
+                Compare
+              </button>
+            </div>
           </div>
         </div>
         <button className="expand-btn" onClick={onToggleExpand}>
@@ -363,7 +381,15 @@ function CharityCard({
       {isExpanded && (
         <div className="charity-params" onClick={(e) => e.stopPropagation()}>
           <p className="param-description">{config.description}</p>
-          <p className="edit-hint">Click any highlighted value to edit it.</p>
+
+          <ParameterSummary
+            charityInputs={charityInputs}
+            charityName={config.name}
+          />
+
+          <p className="edit-hint" style={{ marginTop: "1.5rem" }}>
+            Click any highlighted value below to edit it.
+          </p>
           <CalculationBreakdown
             charityInputs={charityInputs}
             results={results}
@@ -387,6 +413,7 @@ type SelectedCountries = {
 
 function App() {
   const [expandedCharity, setExpandedCharity] = useState<CharityType | null>(null);
+  const [comparisonCharity, setComparisonCharity] = useState<CharityType | null>(null);
 
   // Country selection state
   const [selectedCountries, setSelectedCountries] = useState<SelectedCountries>({
@@ -577,6 +604,8 @@ function App() {
                 onCountryChange={(country) => handleCountryChange(config.type, country)}
                 selectedCountry={selectedCountries[config.type]}
                 maxXBenchmark={maxXBenchmark}
+                onCompareCountries={() => setComparisonCharity(config.type)}
+                moralWeights={moralWeights}
               />
             ))}
           </div>
@@ -680,6 +709,14 @@ function App() {
           </div>
         </aside>
       </main>
+
+      {comparisonCharity && (
+        <CountryComparison
+          charityType={comparisonCharity}
+          moralWeights={moralWeights}
+          onClose={() => setComparisonCharity(null)}
+        />
+      )}
 
       <footer className="footer">
         <p>
