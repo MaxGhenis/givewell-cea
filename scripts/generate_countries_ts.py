@@ -95,7 +95,8 @@ def generate_amf_section() -> str:
         lines.append("    moralWeight5Plus: 73.1914,")
         lines.append(f"    adjustmentOlderMortalities: {format_number(older_deaths / u5_deaths if u5_deaths > 0 else 0)},")
         lines.append(f"    adjustmentDevelopmental: {format_number(dev_value / mortality_value if mortality_value > 0 else 0)},")
-        lines.append(f"    adjustmentProgramBenefits: {format_number(df.iloc[45, col]) if pd.notna(df.iloc[45, col]) else '0.5'},")
+        # Row 46 is NaN in spreadsheet - this is a model constant, not country-specific
+        lines.append("    adjustmentProgramBenefits: 0.5,")
         lines.append("    adjustmentGrantee: -0.04,")
         lines.append(f"    adjustmentLeverage: {format_number(lf_df.iloc[110, col])},")
         lines.append(f"    adjustmentFunging: {format_number(lf_df.iloc[111, col])},")
@@ -154,16 +155,18 @@ def generate_mc_section() -> str:
         col = 8 + i
         lines.append(f"  {country}: {{")
         lines.append(f"    costPerChildReached: {format_number(df.iloc[29, col])},")
-        lines.append(f"    proportionMortalityDuringSeason: {format_number(df.iloc[55, col]) if pd.notna(df.iloc[55, col]) else '0.7'},")
+        # Row 56 has actual values - no fallback needed
+        lines.append(f"    proportionMortalityDuringSeason: {format_number(df.iloc[55, col])},")
         lines.append(f"    malariaMortalityRate: {format_number(df.iloc[49, col])},")
         lines.append(f"    smcEffect: {format_number(df.iloc[48, col])},")
         lines.append("    moralWeightUnder5: 116.25262,")
-        lines.append(f"    adjustmentOlderMortalities: {format_number(df.iloc[68, col] / df.iloc[56, col]) if df.iloc[56, col] > 0 else '0.07'},")
+        # These are true model constants, not country-specific
+        lines.append("    adjustmentOlderMortalities: 0.07,")
         lines.append("    adjustmentDevelopmental: 0.25,")
         lines.append("    adjustmentProgramBenefits: 0.2,")
         lines.append("    adjustmentGrantee: -0.08,")
-        lines.append(f"    adjustmentLeverage: {format_number(lf_df.iloc[110, col]) if lf_df is not None else '-0.004'},")
-        lines.append(f"    adjustmentFunging: {format_number(lf_df.iloc[111, col]) if lf_df is not None else '-0.11'},")
+        lines.append(f"    adjustmentLeverage: {format_number(lf_df.iloc[110, col]) if lf_df is not None and pd.notna(lf_df.iloc[110, col]) else '-0.004'},")
+        lines.append(f"    adjustmentFunging: {format_number(lf_df.iloc[111, col]) if lf_df is not None and pd.notna(lf_df.iloc[111, col]) else '-0.11'},")
         lines.append("  },")
 
     lines.append("};")
@@ -270,7 +273,8 @@ def generate_ni_section() -> str:
     for i, state in enumerate(states):
         col = 8 + i
         # Row 25 is "proportion who would NOT be reached counterfactually"
-        prop_not_reached = df.iloc[24, col] if pd.notna(df.iloc[24, col]) else 0.5
+        # This value exists in the spreadsheet for all states
+        prop_not_reached = df.iloc[24, col]
         prop_reached_cf = 1 - prop_not_reached
 
         lines.append(f"  {state}: {{")
@@ -279,13 +283,14 @@ def generate_ni_section() -> str:
         lines.append(f"    probabilityDeathUnvaccinated: {format_number(df.iloc[45, col])},")
         lines.append("    vaccineEffect: 0.52,")
         lines.append("    moralWeightUnder5: 116.25262,")
+        # These are model constants, not state-specific
         lines.append("    adjustmentOlderMortalities: 0.18,")
         lines.append("    adjustmentDevelopmental: 0.28,")
         lines.append("    adjustmentConsumption: 0.06,")
         lines.append("    adjustmentProgramBenefits: 0.503,")
         lines.append("    adjustmentGrantee: -0.07,")
-        leverage = lf_df.iloc[89, col] if lf_df is not None and len(lf_df) > 89 else -0.003
-        funging = lf_df.iloc[90, col] if lf_df is not None and len(lf_df) > 90 else -0.12
+        leverage = lf_df.iloc[89, col] if lf_df is not None and len(lf_df) > 89 and pd.notna(lf_df.iloc[89, col]) else -0.003
+        funging = lf_df.iloc[90, col] if lf_df is not None and len(lf_df) > 90 and pd.notna(lf_df.iloc[90, col]) else -0.12
         if abs(leverage) > 1:
             leverage = -0.003
         if abs(funging) > 1:
@@ -300,9 +305,10 @@ def generate_ni_section() -> str:
 
 def generate_gd_section() -> str:
     """Generate GiveDirectly section."""
-    df = pd.read_excel(DATA_DIR / "givedirectly.xlsx", sheet_name="Country", header=None)
+    # Use New CEA sheet which has complete data for all countries
+    df = pd.read_excel(DATA_DIR / "givedirectly.xlsx", sheet_name="New CEA", header=None)
 
-    countries_raw = df.iloc[0, 1:6].tolist()
+    countries_raw = df.iloc[1, 1:6].tolist()
     countries = []
     display_names = {}
     for c in countries_raw:
@@ -332,9 +338,10 @@ def generate_gd_section() -> str:
 
     for i, country in enumerate(countries):
         col = 1 + i
-        household_size = df.iloc[3, col] if pd.notna(df.iloc[3, col]) else 4.5
-        prop_under5 = df.iloc[5, col] if pd.notna(df.iloc[5, col]) else 0.15
-        consumption = df.iloc[8, col] if pd.notna(df.iloc[8, col]) else 500
+        # Extract from New CEA sheet - all values present
+        household_size = df.iloc[9, col]  # Row 10
+        prop_under5 = df.iloc[40, col]    # Row 41
+        consumption = df.iloc[13, col]    # Row 14 - baseline consumption PPP
 
         lines.append(f"  {country}: {{")
         lines.append("    transferAmount: 1000,")
