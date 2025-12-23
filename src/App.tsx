@@ -233,6 +233,7 @@ interface CharityCardProps {
   selectedCountry: string;
   onCompareCountries: () => void;
   allCountryResults: { country: string; label: string; xBenchmark: number }[];
+  globalScale: { min: number; max: number }; // Consistent scale across all charities
 }
 
 // Get country options for a charity type
@@ -264,6 +265,7 @@ function CharityCard({
   selectedCountry,
   onCompareCountries,
   allCountryResults,
+  globalScale,
 }: CharityCardProps) {
   // Get grant size for display in labels
   const grantSize = charityInputs.inputs.grantSize;
@@ -271,15 +273,14 @@ function CharityCard({
     ? `$${(grantSize / 1_000_000).toFixed(grantSize % 1_000_000 === 0 ? 0 : 1)}M`
     : `$${(grantSize / 1_000).toFixed(0)}K`;
 
-  // Calculate range stats
+  // Calculate this charity's range stats (for display, not scaling)
   const sortedResults = [...allCountryResults].sort((a, b) => a.xBenchmark - b.xBenchmark);
   const minX = sortedResults[0]?.xBenchmark || 0;
   const maxX = sortedResults[sortedResults.length - 1]?.xBenchmark || 0;
-  const medianX = sortedResults[Math.floor(sortedResults.length / 2)]?.xBenchmark || 0;
 
-  // Scale for the strip plot (0-100%)
-  const plotMin = Math.max(0, minX - (maxX - minX) * 0.1);
-  const plotMax = maxX + (maxX - minX) * 0.1;
+  // Use GLOBAL scale for consistent comparison across all charities
+  const plotMin = globalScale.min;
+  const plotMax = globalScale.max;
   const plotRange = plotMax - plotMin || 1;
 
   const getPosition = (x: number) => ((x - plotMin) / plotRange) * 100;
@@ -339,16 +340,16 @@ function CharityCard({
       </div>
 
       <div className="charity-metrics">
-        {/* Range display */}
+        {/* Range display - consistent scale across all charities */}
         <div className="range-section">
           <div className="range-header">
             <span className="range-label">Cost-effectiveness range</span>
             <span className="range-stats">
-              {minX.toFixed(1)}× – {maxX.toFixed(1)}× (median: {medianX.toFixed(1)}×)
+              {minX.toFixed(1)}× – {maxX.toFixed(1)}×
             </span>
           </div>
 
-          {/* Strip plot showing all countries */}
+          {/* Strip plot showing all countries - uses global scale */}
           <div className="range-plot">
             {/* Range bar background */}
             <div
@@ -358,12 +359,6 @@ function CharityCard({
                 width: `${getPosition(maxX) - getPosition(minX)}%`,
                 backgroundColor: config.color,
               }}
-            />
-
-            {/* Median line */}
-            <div
-              className="range-median"
-              style={{ left: `${getPosition(medianX)}%` }}
             />
 
             {/* Individual country dots */}
@@ -385,10 +380,10 @@ function CharityCard({
               </div>
             ))}
 
-            {/* Axis labels */}
+            {/* Axis labels - show global scale */}
             <div className="range-axis">
-              <span>{plotMin.toFixed(1)}×</span>
-              <span>{plotMax.toFixed(1)}×</span>
+              <span>{plotMin.toFixed(0)}×</span>
+              <span>{plotMax.toFixed(0)}×</span>
             </div>
           </div>
         </div>
@@ -622,14 +617,23 @@ function App() {
     return results;
   }, [getAllCountryResults]);
 
-  // Sort charities by cost-effectiveness
-  const sortedCharities = useMemo(() => {
-    return [...CHARITY_CONFIGS].sort(
-      (a, b) =>
-        charityResults[b.type].finalXBenchmark -
-        charityResults[a.type].finalXBenchmark
-    );
-  }, [charityResults]);
+  // Compute GLOBAL scale for consistent comparison across all charities
+  const globalScale = useMemo(() => {
+    let globalMin = Infinity;
+    let globalMax = 0;
+    for (const results of Object.values(allCountryResultsByCharity)) {
+      for (const r of results) {
+        if (r.xBenchmark < globalMin) globalMin = r.xBenchmark;
+        if (r.xBenchmark > globalMax) globalMax = r.xBenchmark;
+      }
+    }
+    // Add 5% padding on each side for visual clarity
+    const range = globalMax - globalMin;
+    return {
+      min: Math.max(0, globalMin - range * 0.05),
+      max: globalMax + range * 0.05,
+    };
+  }, [allCountryResultsByCharity]);
 
   return (
     <div className="app">
@@ -641,19 +645,21 @@ function App() {
       </div>
 
       <header className="header">
-        <div className="header-content">
-          <h1>GiveWell CEA Calculator</h1>
-          <p className="subtitle">
-            An open-source implementation of GiveWell's cost-effectiveness
-            analysis for top charities. Adjust parameters to explore how
-            different assumptions affect relative effectiveness.
-          </p>
-        </div>
-        <div className="header-meta">
-          <span className="version">November 2025 Model</span>
-          <button className="reset-btn" onClick={resetToDefaults}>
-            Reset to defaults
-          </button>
+        <div className="header-inner">
+          <div className="header-content">
+            <h1>GiveWell CEA Calculator</h1>
+            <p className="subtitle">
+              An open-source implementation of GiveWell's cost-effectiveness
+              analysis for top charities. Adjust parameters to explore how
+              different assumptions affect relative effectiveness.
+            </p>
+          </div>
+          <div className="header-meta">
+            <span className="version">November 2025 Model</span>
+            <button className="reset-btn" onClick={resetToDefaults}>
+              Reset to defaults
+            </button>
+          </div>
         </div>
       </header>
 
@@ -668,7 +674,7 @@ function App() {
           </div>
 
           <div className="charities-grid">
-            {sortedCharities.map((config) => (
+            {CHARITY_CONFIGS.map((config) => (
               <CharityCard
                 key={config.type}
                 config={config}
@@ -685,41 +691,13 @@ function App() {
                 selectedCountry={selectedCountries[config.type]}
                 onCompareCountries={() => setComparisonCharity(config.type)}
                 allCountryResults={allCountryResultsByCharity[config.type]}
+                globalScale={globalScale}
               />
             ))}
           </div>
         </section>
 
         <aside className="sidebar">
-          <div className="summary-panel">
-            <h3>Summary</h3>
-            <div className="summary-stats">
-              <div className="summary-stat">
-                <span className="stat-value">
-                  {Math.max(
-                    ...Object.values(charityResults).map(
-                      (r) => r.finalXBenchmark
-                    )
-                  ).toFixed(1)}
-                  ×
-                </span>
-                <span className="stat-label">Best cost-effectiveness</span>
-              </div>
-              <div className="summary-stat">
-                <span className="stat-value">
-                  {formatCurrency(
-                    Math.min(
-                      ...Object.values(charityResults)
-                        .map((r) => r.costPerDeathAverted)
-                        .filter((c) => c !== Infinity)
-                    )
-                  )}
-                </span>
-                <span className="stat-label">Lowest cost per death averted</span>
-              </div>
-            </div>
-          </div>
-
           <MoralWeightsPanel
             weights={moralWeights}
             onChange={handleMoralWeightsChange}
