@@ -233,7 +233,6 @@ interface CharityCardProps {
   selectedCountry: string;
   maxXBenchmark: number;
   onCompareCountries: () => void;
-  moralWeights: MoralWeights;
 }
 
 // Get country options for a charity type
@@ -265,7 +264,6 @@ function CharityCard({
   selectedCountry,
   maxXBenchmark,
   onCompareCountries,
-  moralWeights,
 }: CharityCardProps) {
   const barWidth = (results.finalXBenchmark / maxXBenchmark) * 100;
 
@@ -599,7 +597,6 @@ function App() {
                 selectedCountry={selectedCountries[config.type]}
                 maxXBenchmark={maxXBenchmark}
                 onCompareCountries={() => setComparisonCharity(config.type)}
-                moralWeights={moralWeights}
               />
             ))}
           </div>

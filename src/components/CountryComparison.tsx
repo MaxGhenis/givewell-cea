@@ -35,12 +35,7 @@ import {
   calculateCharity,
   applyMoralWeights,
   type MoralWeights,
-  type AMFCountry,
-  type MCCountry,
-  type HKCountry,
-  type NICountry,
-  type GDCountry,
-  type DWVariant,
+  type CharityInputs,
 } from "../lib/models";
 
 interface CountryComparisonProps {
@@ -50,7 +45,12 @@ interface CountryComparisonProps {
 }
 
 // Type guard to get country data
-function getCountryData(charityType: CharityType) {
+function getCountryData(charityType: CharityType): {
+  countries: readonly string[];
+  names: Record<string, string>;
+  params: Record<string, Record<string, number>>;
+  getInputs: (country: any, grantSize: number) => any;
+} {
   switch (charityType) {
     case "amf":
       return {
@@ -146,7 +146,7 @@ export function CountryComparison({ charityType, moralWeights, onClose }: Countr
   const results = useMemo(() => {
     return selectedCountries.map((country) => {
       const inputs = countryData.getInputs(country as any, 1_000_000);
-      const charityInputs = { type: charityType, inputs };
+      const charityInputs = { type: charityType, inputs } as CharityInputs;
       const withWeights = applyMoralWeights(charityInputs, moralWeights);
       const result = calculateCharity(withWeights);
       return { country, result };

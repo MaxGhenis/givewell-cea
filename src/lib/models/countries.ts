@@ -23,14 +23,14 @@ import type { DewormingEvidenceActionInputs } from "./deworming-evidence-action"
 // AMF Country Data
 // ============================================================================
 
-export const AMF_COUNTRIES = ["chad", "drc", "guinea", "nigeria_pmi", "nigeria_pmi", "south_sudan", "togo", "uganda"] as const;
+export const AMF_COUNTRIES = ["chad", "drc", "guinea", "nigeria_gf", "nigeria_pmi", "south_sudan", "togo", "uganda"] as const;
 export type AMFCountry = (typeof AMF_COUNTRIES)[number];
 
 export const AMF_COUNTRY_NAMES: Record<AMFCountry, string> = {
   chad: "Chad",
   drc: "DRC",
   guinea: "Guinea",
-  nigeria_pmi: "Nigeria (PMI)",
+  nigeria_gf: "Nigeria (GF)",
   nigeria_pmi: "Nigeria (PMI)",
   south_sudan: "South Sudan",
   togo: "Togo",
@@ -83,7 +83,7 @@ export const AMF_COUNTRY_PARAMS: Record<AMFCountry, Omit<AMFInputs, "grantSize">
     adjustmentFunging: -0.3003019883,
     adjustmentLeverageFungingForCostPerLife: -0.3016845139,
   },
-  nigeria_pmi: {
+  nigeria_gf: {
     costPerUnder5Reached: 11.153117808796214,
     yearsEffectiveCoverage: 1.965608617,
     malariaMortalityRate: 0.002704804276,
