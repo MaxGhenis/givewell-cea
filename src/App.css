@@ -1067,6 +1067,11 @@ body {
   gap: 0;
 }
 
+/* Hide the standalone arrow divs - we'll use CSS borders instead */
+.calc-arrow {
+  display: none;
+}
+
 /* Individual step cards */
 .calc-step-card {
   display: flex;
@@ -1076,6 +1081,24 @@ body {
   border-radius: 2px;
   overflow: hidden;
   transition: all 0.2s ease;
+  position: relative;
+}
+
+/* Add connecting line between steps */
+.calc-step-card:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 15px;
+  width: 2px;
+  height: 8px;
+  background: var(--color-border-dark);
+}
+
+/* Add small gap between cards for the connector */
+.calc-step-card + .calc-arrow + .calc-step-card,
+.calc-step-card:not(:first-child) {
+  margin-top: 8px;
 }
 
 .calc-step-card:hover {
@@ -1138,15 +1161,6 @@ body {
   flex-direction: column;
   gap: 2px;
   font-size: 0.8rem;
-}
-
-/* Flow arrows between steps - compact inline style */
-.calc-arrow {
-  text-align: center;
-  font-size: 0.7rem;
-  color: var(--color-border-dark);
-  line-height: 1;
-  padding: 2px 0;
 }
 
 /* Sources footer */
