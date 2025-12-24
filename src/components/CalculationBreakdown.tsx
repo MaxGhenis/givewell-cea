@@ -14,6 +14,20 @@ import type { GiveDirectlyInputs } from "../lib/models/givedirectly";
 import type { DewormingInputs } from "../lib/models/deworming";
 import type { CharityInputs, UnifiedResults } from "../lib/models";
 
+// Static value component - for displaying values that can't be edited inline (like grant size)
+function StaticValue({ value, label }: { value: number; label: string }) {
+  const displayValue = value >= 1000000
+    ? `$${(value / 1000000).toFixed(1)}M`
+    : `$${value.toLocaleString()}`;
+
+  return (
+    <span className="static-value" title={label}>
+      <span className="value-display static">{displayValue}</span>
+      <span className="value-label">{label}</span>
+    </span>
+  );
+}
+
 // Editable value component - click to edit inline
 interface EditableValueProps {
   value: number;
@@ -198,16 +212,7 @@ function AMFBreakdown({
           <div className="step-content">
             <div className="step-title">Children Reached</div>
             <div className="step-formula">
-              <EditableValue
-                value={inputs.grantSize}
-                onChange={(v) => onInputChange("grantSize", v)}
-                format="currency"
-                min={100000}
-                max={100000000}
-                step={100000}
-                label="Grant size"
-                source={{ text: "Total funding allocated to AMF's insecticide-treated net distribution program", url: "https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" }}
-              />
+              <StaticValue value={inputs.grantSize} label="Grant size (set at top)" />
               {" ÷ "}
               <EditableValue
                 value={inputs.costPerUnder5Reached}
@@ -378,16 +383,7 @@ function MCBreakdown({
           <div className="step-content">
             <div className="step-title">Children Reached</div>
             <div className="step-formula">
-              <EditableValue
-                value={inputs.grantSize}
-                onChange={(v) => onInputChange("grantSize", v)}
-                format="currency"
-                min={100000}
-                max={100000000}
-                step={100000}
-                label="Grant size"
-                source={{ text: "Total funding allocated to Malaria Consortium's seasonal malaria chemoprevention (SMC) program", url: "https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" }}
-              />
+              <StaticValue value={inputs.grantSize} label="Grant size (set at top)" />
               {" ÷ "}
               <EditableValue
                 value={inputs.costPerChildReached}
@@ -533,7 +529,7 @@ function HKBreakdown({
           <div className="step-content">
             <div className="step-title">Children Reached</div>
             <div className="step-formula">
-              <EditableValue value={inputs.grantSize} onChange={(v) => onInputChange("grantSize", v)} format="currency" min={100000} max={100000000} step={100000} label="Grant size" source={{ text: "Total funding allocated to Helen Keller's VAS program", url: "https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" }} />
+              <StaticValue value={inputs.grantSize} label="Grant size (set at top)" />
               {" ÷ "}
               <EditableValue value={inputs.costPerPersonUnder5} onChange={(v) => onInputChange("costPerPersonUnder5", v)} format="currencySmall" min={0.5} max={10} label="Cost per dose" source={{ text: "Cost to deliver one high-dose Vitamin A supplement (200,000 IU capsule) to a child under 5, including distribution costs", url: "https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" }} />
               {" = "}
@@ -653,16 +649,7 @@ function NIBreakdown({
           <div className="step-content">
             <div className="step-title">Children Reached</div>
             <div className="step-formula">
-              <EditableValue
-                value={inputs.grantSize}
-                onChange={(v) => onInputChange("grantSize", v)}
-                format="currency"
-                min={100000}
-                max={100000000}
-                step={100000}
-                label="Grant size"
-                source={{ text: "Total funding allocated to New Incentives' conditional cash transfer vaccination program in Nigeria", url: "https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" }}
-              />
+              <StaticValue value={inputs.grantSize} label="Grant size (set at top)" />
               {" ÷ "}
               <EditableValue
                 value={inputs.costPerChildReached}
@@ -803,16 +790,7 @@ function GDBreakdown({
           <div className="step-content">
             <div className="step-title">Households Reached</div>
             <div className="step-formula">
-              <EditableValue
-                value={inputs.grantSize}
-                onChange={(v) => onInputChange("grantSize", v)}
-                format="currency"
-                min={100000}
-                max={100000000}
-                step={100000}
-                label="Grant size"
-                source={{ text: "Total funding allocated to GiveDirectly's unconditional cash transfer program", url: "https://blog.givewell.org/2024/11/12/re-evaluating-the-impact-of-unconditional-cash-transfers/" }}
-              />
+              <StaticValue value={inputs.grantSize} label="Grant size (set at top)" />
               {" ÷ ("}
               <EditableValue
                 value={inputs.transferAmount}
@@ -1034,16 +1012,7 @@ function DWBreakdown({
           <div className="step-content">
             <div className="step-title">Children Treated</div>
             <div className="step-formula">
-              <EditableValue
-                value={inputs.grantSize}
-                onChange={(v) => onInputChange("grantSize", v)}
-                format="currency"
-                min={100000}
-                max={100000000}
-                step={100000}
-                label="Grant size"
-                source={{ text: "Total funding allocated to school-based deworming programs (Deworm the World Initiative at Evidence Action)", url: "https://www.givewell.org/international/technical/programs/deworming" }}
-              />
+              <StaticValue value={inputs.grantSize} label="Grant size (set at top)" />
               {" ÷ "}
               <EditableValue
                 value={inputs.costPerChildTreated}

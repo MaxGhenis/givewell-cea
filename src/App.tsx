@@ -639,7 +639,7 @@ function App() {
             <div className="section-header-top">
               <h2>Top Charities Comparison</h2>
               <div className="grant-size-control">
-                <label htmlFor="grant-size">Your donation:</label>
+                <label htmlFor="grant-size">Grant size:</label>
                 <div className="grant-size-input-wrapper">
                   <span className="grant-size-prefix">$</span>
                   <input
