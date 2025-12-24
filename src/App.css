@@ -220,17 +220,61 @@ body {
   border-bottom: 2px solid var(--color-ink);
 }
 
+.section-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
 .section-header h2 {
   font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: 400;
   color: var(--color-ink);
-  margin-bottom: var(--space-xs);
+  margin: 0;
 }
 
 .section-header p {
   color: var(--color-text-muted);
   font-size: 0.95rem;
+}
+
+/* Grant size control */
+.grant-size-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.grant-size-control label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.grant-size-select {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-ink);
+  border-radius: 2px;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.grant-size-select:hover {
+  border-color: var(--color-coral);
+}
+
+.grant-size-select:focus {
+  outline: none;
+  border-color: var(--color-coral);
 }
 
 /* Charities grid */
@@ -272,8 +316,9 @@ body {
 
 .charity-name-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-sm);
 }
 
 .charity-name-row h3 {
@@ -284,25 +329,10 @@ body {
   color: var(--color-ink);
 }
 
-.country-selector {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border: 1px solid var(--color-border);
-  border-radius: 2px;
-  background: var(--color-bg-card);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  width: fit-content;
-}
-
-.country-selector:hover {
-  border-color: var(--color-coral);
-}
-
-.country-selector:focus {
-  outline: none;
-  border-color: var(--color-coral);
+.charity-range-summary {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 
 .charity-logo-container {
@@ -336,14 +366,16 @@ body {
 }
 
 .expand-btn {
-  width: 32px;
-  height: 32px;
+  padding: var(--space-xs) var(--space-sm);
   border-radius: 2px;
   border: 1px solid var(--color-border-dark);
   background: var(--color-bg-card);
   color: var(--color-text-secondary);
-  font-size: 1.2rem;
-  line-height: 1;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -358,43 +390,18 @@ body {
   border-color: var(--color-coral);
 }
 
-/* NEW: Range visualization - the core redesign */
-.charity-metrics {
-  padding: var(--space-lg);
-}
-
-.range-section {
-  margin-bottom: var(--space-lg);
-}
-
-.range-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: var(--space-sm);
-}
-
-.range-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-text-muted);
-}
-
-.range-stats {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--color-text-muted);
+/* Strip plot container */
+.charity-strip {
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-bg-alt);
 }
 
 /* Strip plot / range visualization */
 .range-plot {
   position: relative;
-  height: 60px;
-  background: var(--color-bg-alt);
+  height: 48px;
+  background: var(--color-bg);
   border-radius: 2px;
-  margin-bottom: var(--space-xs);
 }
 
 .range-axis {
@@ -402,27 +409,27 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 20px;
+  height: 16px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 0 var(--space-xs);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--color-text-muted);
-  border-top: 1px solid var(--color-border);
 }
 
 .range-bar {
   position: absolute;
-  top: 12px;
-  height: 24px;
+  top: 10px;
+  height: 16px;
   border-radius: 2px;
-  opacity: 0.3;
+  opacity: 0.25;
 }
 
 .range-dot {
   position: absolute;
-  top: 18px;
+  top: 12px;
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -430,40 +437,192 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   transform: translateX(-50%);
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: all 0.15s ease;
   z-index: 2;
 }
 
 .range-dot:hover {
-  transform: translateX(-50%) scale(1.3);
+  transform: translateX(-50%) scale(1.4);
   z-index: 10;
 }
 
 .range-dot.selected {
-  width: 16px;
-  height: 16px;
-  top: 16px;
+  width: 14px;
+  height: 14px;
+  top: 11px;
   border-width: 3px;
   z-index: 5;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
 }
 
-.range-dot-label {
-  position: absolute;
-  top: -18px;
-  left: 50%;
-  transform: translateX(-50%);
+/* Locale chips - the data as clickable elements */
+.locale-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-bg-card);
+  border-top: 1px solid var(--color-border);
+}
+
+.locale-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.locale-chip:hover {
+  border-color: var(--chip-color, var(--color-coral));
+  background: var(--color-bg-card);
+}
+
+.locale-chip.selected {
+  background: var(--chip-color, var(--color-coral));
+  border-color: var(--chip-color, var(--color-coral));
+  color: white;
+}
+
+.chip-locale {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: inherit;
+}
+
+.chip-value {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  pointer-events: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: inherit;
 }
 
-.range-dot:hover .range-dot-label,
-.range-dot.selected .range-dot-label {
-  opacity: 1;
+.locale-chip:not(.selected) .chip-value {
+  color: var(--chip-color, var(--color-coral));
+}
+
+/* Expanded details panel */
+.charity-details {
+  padding: var(--space-lg);
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+  animation: slideDown 0.2s ease;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.details-header h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--color-ink);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.details-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.close-details {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.close-details:hover {
+  background: var(--color-coral);
+  border-color: var(--color-coral);
+  color: white;
+}
+
+.details-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
+  margin-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detail-metric {
+  text-align: center;
+}
+
+.detail-value {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  margin-bottom: var(--space-xs);
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Calculation details (collapsible) */
+.calculation-details {
+  margin-top: var(--space-md);
+}
+
+.calculation-details summary {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: var(--space-sm) 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.calculation-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.calculation-details summary::before {
+  content: "▸";
+  font-size: 0.7rem;
+  transition: transform 0.15s ease;
+}
+
+.calculation-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.calculation-details summary:hover {
+  color: var(--color-coral);
 }
 
 /* Primary metric display */

@@ -44,7 +44,6 @@ import {
   type DWVariant,
 } from "./lib/models";
 import { CalculationBreakdown } from "./components/CalculationBreakdown";
-import { CountryComparison } from "./components/CountryComparison";
 import "./App.css";
 
 function formatNumber(n: number, decimals = 1): string {
@@ -231,27 +230,8 @@ interface CharityCardProps {
   onInputChange: (inputs: CharityInputs) => void;
   onCountryChange: (country: string) => void;
   selectedCountry: string;
-  onCompareCountries: () => void;
   allCountryResults: { country: string; label: string; xBenchmark: number }[];
   globalScale: { min: number; max: number }; // Consistent scale across all charities
-}
-
-// Get country options for a charity type
-function getCountryOptions(charityType: CharityType): { value: string; label: string }[] {
-  switch (charityType) {
-    case "amf":
-      return AMF_COUNTRIES.map(c => ({ value: c, label: AMF_COUNTRY_NAMES[c] }));
-    case "malaria-consortium":
-      return MC_COUNTRIES.map(c => ({ value: c, label: MC_COUNTRY_NAMES[c] }));
-    case "helen-keller":
-      return HK_COUNTRIES.map(c => ({ value: c, label: HK_COUNTRY_NAMES[c] }));
-    case "new-incentives":
-      return NI_COUNTRIES.map(c => ({ value: c, label: NI_COUNTRY_NAMES[c] }));
-    case "givedirectly":
-      return GD_COUNTRIES.map(c => ({ value: c, label: GD_COUNTRY_NAMES[c] }));
-    case "deworming":
-      return DW_VARIANTS.map(c => ({ value: c, label: DW_VARIANT_NAMES[c] }));
-  }
 }
 
 function CharityCard({
@@ -263,20 +243,13 @@ function CharityCard({
   onInputChange,
   onCountryChange,
   selectedCountry,
-  onCompareCountries,
   allCountryResults,
   globalScale,
 }: CharityCardProps) {
-  // Get grant size for display in labels
-  const grantSize = charityInputs.inputs.grantSize;
-  const grantLabel = grantSize >= 1_000_000
-    ? `$${(grantSize / 1_000_000).toFixed(grantSize % 1_000_000 === 0 ? 0 : 1)}M`
-    : `$${(grantSize / 1_000).toFixed(0)}K`;
-
   // Calculate this charity's range stats (for display, not scaling)
-  const sortedResults = [...allCountryResults].sort((a, b) => a.xBenchmark - b.xBenchmark);
-  const minX = sortedResults[0]?.xBenchmark || 0;
-  const maxX = sortedResults[sortedResults.length - 1]?.xBenchmark || 0;
+  const sortedResults = [...allCountryResults].sort((a, b) => b.xBenchmark - a.xBenchmark);
+  const minX = sortedResults[sortedResults.length - 1]?.xBenchmark || 0;
+  const maxX = sortedResults[0]?.xBenchmark || 0;
 
   // Use GLOBAL scale for consistent comparison across all charities
   const plotMin = globalScale.min;
@@ -285,8 +258,17 @@ function CharityCard({
 
   const getPosition = (x: number) => ((x - plotMin) / plotRange) * 100;
 
+  // Handle chip click - select locale and expand to show details
+  const handleChipClick = (country: string) => {
+    onCountryChange(country);
+    if (!isExpanded) {
+      onToggleExpand();
+    }
+  };
+
   return (
     <div className="charity-card">
+      {/* Compact header */}
       <div className="charity-header" style={{ borderLeftColor: config.color }}>
         <div className="charity-title">
           <a
@@ -320,128 +302,110 @@ function CharityCard({
           </a>
           <div className="charity-name-row">
             <h3>{config.name}</h3>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <button
-                className="compare-countries-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCompareCountries();
-                }}
-                title="Compare all locations"
-              >
-                {allCountryResults.length} locations
-              </button>
-            </div>
-          </div>
-        </div>
-        <button className="expand-btn" onClick={onToggleExpand}>
-          {isExpanded ? "−" : "+"}
-        </button>
-      </div>
-
-      <div className="charity-metrics">
-        {/* Range display - consistent scale across all charities */}
-        <div className="range-section">
-          <div className="range-header">
-            <span className="range-label">Cost-effectiveness range</span>
-            <span className="range-stats">
-              {minX.toFixed(1)}× – {maxX.toFixed(1)}×
+            <span className="charity-range-summary">
+              {minX.toFixed(0)}× – {maxX.toFixed(0)}×
             </span>
           </div>
+        </div>
+      </div>
 
-          {/* Strip plot showing all countries - uses global scale */}
-          <div className="range-plot">
-            {/* Range bar background */}
+      {/* Strip plot - visual comparison */}
+      <div className="charity-strip">
+        <div className="range-plot">
+          {/* Range bar background */}
+          <div
+            className="range-bar"
+            style={{
+              left: `${getPosition(minX)}%`,
+              width: `${getPosition(maxX) - getPosition(minX)}%`,
+              backgroundColor: config.color,
+            }}
+          />
+
+          {/* Individual country dots */}
+          {allCountryResults.map((cr) => (
             <div
-              className="range-bar"
+              key={cr.country}
+              className={`range-dot ${cr.country === selectedCountry ? 'selected' : ''}`}
               style={{
-                left: `${getPosition(minX)}%`,
-                width: `${getPosition(maxX) - getPosition(minX)}%`,
+                left: `${getPosition(cr.xBenchmark)}%`,
                 backgroundColor: config.color,
               }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleChipClick(cr.country);
+              }}
+              title={`${cr.label}: ${cr.xBenchmark.toFixed(1)}×`}
             />
+          ))}
 
-            {/* Individual country dots */}
-            {allCountryResults.map((cr) => (
-              <div
-                key={cr.country}
-                className={`range-dot ${cr.country === selectedCountry ? 'selected' : ''}`}
-                style={{
-                  left: `${getPosition(cr.xBenchmark)}%`,
-                  backgroundColor: config.color,
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCountryChange(cr.country);
-                }}
-                title={`${cr.label}: ${cr.xBenchmark.toFixed(1)}×`}
-              >
-                <span className="range-dot-label">{cr.label}</span>
-              </div>
-            ))}
-
-            {/* Axis labels - show global scale */}
-            <div className="range-axis">
-              <span>{plotMin.toFixed(0)}×</span>
-              <span>{plotMax.toFixed(0)}×</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Current selection details */}
-        <div className="metric-primary">
-          <span className="metric-value" style={{ color: config.color }}>
-            {results.finalXBenchmark.toFixed(1)}×
-          </span>
-          <span className="metric-label">
-            <select
-              className="country-selector"
-              value={selectedCountry}
-              onChange={(e) => onCountryChange(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              style={{ marginLeft: '0.5rem' }}
-            >
-              {getCountryOptions(config.type).map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </span>
-        </div>
-
-        <div className="metrics-grid">
-          <div className="metric">
-            <span className="metric-value-sm">
-              {results.costPerDeathAverted === Infinity ? "N/A" : formatCurrency(results.costPerDeathAverted)}
-            </span>
-            <span className="metric-label-sm">cost per death averted</span>
-          </div>
-          <div className="metric">
-            <span className="metric-value-sm">
-              {results.deathsAvertedUnder5 === 0 ? "N/A" : results.deathsAvertedUnder5.toFixed(0)}
-            </span>
-            <span className="metric-label-sm">deaths averted per {grantLabel}</span>
-          </div>
-          <div className="metric">
-            <span className="metric-value-sm">
-              {formatNumber(results.peopleReached, 0)}
-            </span>
-            <span className="metric-label-sm">people reached per {grantLabel}</span>
+          {/* Axis labels */}
+          <div className="range-axis">
+            <span>{plotMin.toFixed(0)}×</span>
+            <span>{plotMax.toFixed(0)}×</span>
           </div>
         </div>
       </div>
 
-      {isExpanded && (
-        <div className="charity-params" onClick={(e) => e.stopPropagation()}>
-          <p className="param-description">{config.description}</p>
+      {/* Locale chips - the data as clickable elements */}
+      <div className="locale-chips">
+        {sortedResults.map((cr) => (
+          <button
+            key={cr.country}
+            className={`locale-chip ${cr.country === selectedCountry ? 'selected' : ''}`}
+            style={{
+              '--chip-color': config.color,
+            } as React.CSSProperties}
+            onClick={() => handleChipClick(cr.country)}
+          >
+            <span className="chip-locale">{cr.label}</span>
+            <span className="chip-value">{cr.xBenchmark.toFixed(1)}×</span>
+          </button>
+        ))}
+      </div>
 
-          <p className="edit-hint">
-            Click any highlighted value below to edit it.
-          </p>
-          <CalculationBreakdown
-            charityInputs={charityInputs}
-            results={results}
-            onInputChange={onInputChange}
-          />
+      {/* Expanded details - shown when a chip is clicked */}
+      {isExpanded && (
+        <div className="charity-details" onClick={(e) => e.stopPropagation()}>
+          <div className="details-header">
+            <h4>
+              {allCountryResults.find(cr => cr.country === selectedCountry)?.label || selectedCountry}
+              <span className="details-value" style={{ color: config.color }}>
+                {results.finalXBenchmark.toFixed(1)}×
+              </span>
+            </h4>
+            <button className="close-details" onClick={onToggleExpand}>×</button>
+          </div>
+
+          <div className="details-metrics">
+            <div className="detail-metric">
+              <span className="detail-value">
+                {results.costPerDeathAverted === Infinity ? "N/A" : formatCurrency(results.costPerDeathAverted)}
+              </span>
+              <span className="detail-label">cost per death averted</span>
+            </div>
+            <div className="detail-metric">
+              <span className="detail-value">
+                {results.deathsAvertedUnder5 === 0 ? "N/A" : results.deathsAvertedUnder5.toFixed(0)}
+              </span>
+              <span className="detail-label">deaths averted per $1M</span>
+            </div>
+            <div className="detail-metric">
+              <span className="detail-value">{formatNumber(results.peopleReached, 0)}</span>
+              <span className="detail-label">people reached per $1M</span>
+            </div>
+          </div>
+
+          <details className="calculation-details">
+            <summary>Edit calculation parameters</summary>
+            <p className="param-description">{config.description}</p>
+            <p className="edit-hint">Click any highlighted value below to edit it.</p>
+            <CalculationBreakdown
+              charityInputs={charityInputs}
+              results={results}
+              onInputChange={onInputChange}
+            />
+          </details>
         </div>
       )}
     </div>
@@ -460,7 +424,6 @@ type SelectedCountries = {
 
 function App() {
   const [expandedCharity, setExpandedCharity] = useState<CharityType | null>(null);
-  const [comparisonCharity, setComparisonCharity] = useState<CharityType | null>(null);
 
   // Country selection state
   const [selectedCountries, setSelectedCountries] = useState<SelectedCountries>({
@@ -471,6 +434,9 @@ function App() {
     givedirectly: "kenya",
     deworming: "base",
   });
+
+  // Global grant size (applies to all charities)
+  const [grantSize, setGrantSize] = useState(1_000_000);
 
   // Moral weights state
   const [moralWeights, setMoralWeights] = useState<MoralWeights>({
@@ -570,20 +536,20 @@ function App() {
       UnifiedResults
     >;
     for (const config of CHARITY_CONFIGS) {
+      // Use global grant size, override per-charity setting
+      const inputsWithGrantSize = {
+        ...charityInputs[config.type],
+        inputs: { ...charityInputs[config.type].inputs, grantSize },
+      } as CharityInputs;
       // Apply moral weights to charity inputs before calculating
-      const inputsWithWeights = applyMoralWeights(
-        charityInputs[config.type],
-        moralWeights
-      );
+      const inputsWithWeights = applyMoralWeights(inputsWithGrantSize, moralWeights);
       results[config.type] = calculateCharity(inputsWithWeights);
     }
     return results;
-  }, [charityInputs, moralWeights]);
+  }, [charityInputs, moralWeights, grantSize]);
 
-  // Helper to compute all country results for a charity type
+  // Helper to compute all country results for a charity type (uses global grantSize)
   const getAllCountryResults = useCallback((charityType: CharityType): { country: string; label: string; xBenchmark: number }[] => {
-    const grantSize = charityInputs[charityType].inputs.grantSize;
-
     const computeForCountry = (country: string, label: string, getInputsFn: (c: any, g: number) => any): { country: string; label: string; xBenchmark: number } => {
       const inputs = getInputsFn(country, grantSize);
       const charityInput = { type: charityType, inputs } as CharityInputs;
@@ -606,7 +572,7 @@ function App() {
       case "deworming":
         return DW_VARIANTS.map(c => computeForCountry(c, DW_VARIANT_NAMES[c], getDWInputsForVariant));
     }
-  }, [charityInputs, moralWeights]);
+  }, [grantSize, moralWeights]);
 
   // Memoized all-country results for each charity
   const allCountryResultsByCharity = useMemo(() => {
@@ -627,11 +593,14 @@ function App() {
         if (r.xBenchmark > globalMax) globalMax = r.xBenchmark;
       }
     }
-    // Add 5% padding on each side for visual clarity
-    const range = globalMax - globalMin;
+    // Round to nice numbers for cleaner axis
+    // Min: round down to nearest 5 (but not below 0)
+    // Max: round up to nearest 50 (50, 100, 150, 200, etc.)
+    const roundedMin = Math.max(0, Math.floor(globalMin / 5) * 5);
+    const roundedMax = Math.ceil(globalMax / 50) * 50;
     return {
-      min: Math.max(0, globalMin - range * 0.05),
-      max: globalMax + range * 0.05,
+      min: roundedMin,
+      max: roundedMax,
     };
   }, [allCountryResultsByCharity]);
 
@@ -666,10 +635,27 @@ function App() {
       <main className="main">
         <section className="charities-section">
           <div className="section-header">
-            <h2>Top Charities Comparison</h2>
+            <div className="section-header-top">
+              <h2>Top Charities Comparison</h2>
+              <div className="grant-size-control">
+                <label htmlFor="grant-size">Grant size:</label>
+                <select
+                  id="grant-size"
+                  value={grantSize}
+                  onChange={(e) => setGrantSize(Number(e.target.value))}
+                  className="grant-size-select"
+                >
+                  <option value={100000}>$100K</option>
+                  <option value={500000}>$500K</option>
+                  <option value={1000000}>$1M</option>
+                  <option value={5000000}>$5M</option>
+                  <option value={10000000}>$10M</option>
+                </select>
+              </div>
+            </div>
             <p>
               Cost-effectiveness expressed as multiples of GiveWell's benchmark
-              (unconditional cash transfers). Click + to expand and adjust parameters.
+              (unconditional cash transfers). Click "Edit" to adjust parameters.
             </p>
           </div>
 
@@ -689,7 +675,6 @@ function App() {
                 onInputChange={(inputs) => handleInputChange(config.type, inputs)}
                 onCountryChange={(country) => handleCountryChange(config.type, country)}
                 selectedCountry={selectedCountries[config.type]}
-                onCompareCountries={() => setComparisonCharity(config.type)}
                 allCountryResults={allCountryResultsByCharity[config.type]}
                 globalScale={globalScale}
               />
@@ -766,14 +751,6 @@ function App() {
           </div>
         </aside>
       </main>
-
-      {comparisonCharity && (
-        <CountryComparison
-          charityType={comparisonCharity}
-          moralWeights={moralWeights}
-          onClose={() => setComparisonCharity(null)}
-        />
-      )}
 
       <footer className="footer">
         <p>
