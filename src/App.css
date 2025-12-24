@@ -1060,6 +1060,116 @@ body {
   margin-bottom: var(--space-md);
 }
 
+/* Flow container for calculation steps */
+.calc-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Individual step cards */
+.calc-step-card {
+  display: flex;
+  align-items: stretch;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.calc-step-card:hover {
+  border-color: var(--color-coral);
+}
+
+.calc-step-card.result-card {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.calc-step-card.result-card .step-title {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.calc-step-card.result-card .result-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-coral-light);
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  background: var(--color-bg-alt);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-right: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.step-title {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.step-formula {
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.step-formula.adjustments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
+}
+
+/* Flow arrows between steps - compact inline style */
+.calc-arrow {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--color-border-dark);
+  line-height: 1;
+  padding: 2px 0;
+}
+
+/* Sources footer */
+.sources-footer {
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.source-link-row {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.source-link-row a {
+  color: var(--color-coral);
+  text-decoration: none;
+}
+
+.source-link-row a:hover {
+  text-decoration: underline;
+}
+
 .calc-section {
   margin-bottom: var(--space-lg);
 }
@@ -1092,7 +1202,7 @@ body {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: 2px;
-  margin-bottom: var(--space-sm);
+  margin-bottom: 0;
   transition: all 0.2s ease;
 }
 
