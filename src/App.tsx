@@ -389,11 +389,11 @@ function CharityCard({
               <span className="detail-value">
                 {results.deathsAvertedUnder5 === 0 ? "N/A" : results.deathsAvertedUnder5.toFixed(0)}
               </span>
-              <span className="detail-label">deaths averted per $1M</span>
+              <span className="detail-label">deaths averted</span>
             </div>
             <div className="detail-metric">
               <span className="detail-value">{formatNumber(results.peopleReached, 0)}</span>
-              <span className="detail-label">people reached per $1M</span>
+              <span className="detail-label">people reached</span>
             </div>
           </div>
 
