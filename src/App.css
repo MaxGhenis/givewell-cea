@@ -255,26 +255,46 @@ body {
   letter-spacing: 0.05em;
 }
 
-.grant-size-select {
+.grant-size-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-ink);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.grant-size-input-wrapper:hover,
+.grant-size-input-wrapper:focus-within {
+  border-color: var(--color-coral);
+}
+
+.grant-size-prefix {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding-left: var(--space-sm);
+}
+
+.grant-size-input {
   font-family: var(--font-mono);
   font-size: 0.9rem;
   font-weight: 600;
   padding: var(--space-xs) var(--space-sm);
-  background: var(--color-bg-card);
-  border: 2px solid var(--color-ink);
-  border-radius: 2px;
+  background: transparent;
+  border: none;
   color: var(--color-ink);
-  cursor: pointer;
-  transition: all 0.15s ease;
+  width: 110px;
 }
 
-.grant-size-select:hover {
-  border-color: var(--color-coral);
-}
-
-.grant-size-select:focus {
+.grant-size-input:focus {
   outline: none;
-  border-color: var(--color-coral);
+}
+
+.grant-size-input::placeholder {
+  color: var(--color-text-muted);
 }
 
 /* Charities grid */

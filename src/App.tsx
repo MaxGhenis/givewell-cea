@@ -229,7 +229,7 @@ interface CharityCardProps {
   onToggleExpand: () => void;
   onInputChange: (inputs: CharityInputs) => void;
   onCountryChange: (country: string) => void;
-  selectedCountry: string;
+  selectedCountry: string | null; // null means no locale selected yet
   allCountryResults: { country: string; label: string; xBenchmark: number }[];
   globalScale: { min: number; max: number }; // Consistent scale across all charities
 }
@@ -247,9 +247,10 @@ function CharityCard({
   globalScale,
 }: CharityCardProps) {
   // Calculate this charity's range stats (for display, not scaling)
-  const sortedResults = [...allCountryResults].sort((a, b) => b.xBenchmark - a.xBenchmark);
-  const minX = sortedResults[sortedResults.length - 1]?.xBenchmark || 0;
-  const maxX = sortedResults[0]?.xBenchmark || 0;
+  // Sort smallest to largest for intuitive reading
+  const sortedResults = [...allCountryResults].sort((a, b) => a.xBenchmark - b.xBenchmark);
+  const minX = sortedResults[0]?.xBenchmark || 0;
+  const maxX = sortedResults[sortedResults.length - 1]?.xBenchmark || 0;
 
   // Use GLOBAL scale for consistent comparison across all charities
   const plotMin = globalScale.min;
@@ -364,8 +365,8 @@ function CharityCard({
         ))}
       </div>
 
-      {/* Expanded details - shown when a chip is clicked */}
-      {isExpanded && (
+      {/* Expanded details - shown when a locale is selected */}
+      {isExpanded && selectedCountry && (
         <div className="charity-details" onClick={(e) => e.stopPropagation()}>
           <div className="details-header">
             <h4>
@@ -412,27 +413,27 @@ function CharityCard({
   );
 }
 
-// Country selection type
+// Country selection type - null means no locale selected yet
 type SelectedCountries = {
-  amf: AMFCountry;
-  "malaria-consortium": MCCountry;
-  "helen-keller": HKCountry;
-  "new-incentives": NICountry;
-  givedirectly: GDCountry;
-  deworming: DWVariant;
+  amf: AMFCountry | null;
+  "malaria-consortium": MCCountry | null;
+  "helen-keller": HKCountry | null;
+  "new-incentives": NICountry | null;
+  givedirectly: GDCountry | null;
+  deworming: DWVariant | null;
 };
 
 function App() {
   const [expandedCharity, setExpandedCharity] = useState<CharityType | null>(null);
 
-  // Country selection state
+  // Country selection state - start with no locale selected
   const [selectedCountries, setSelectedCountries] = useState<SelectedCountries>({
-    amf: "chad",
-    "malaria-consortium": "burkina_faso",
-    "helen-keller": "drc",
-    "new-incentives": "bauchi",
-    givedirectly: "kenya",
-    deworming: "base",
+    amf: null,
+    "malaria-consortium": null,
+    "helen-keller": null,
+    "new-incentives": null,
+    givedirectly: null,
+    deworming: null,
   });
 
   // Global grant size (applies to all charities)
@@ -638,19 +639,21 @@ function App() {
             <div className="section-header-top">
               <h2>Top Charities Comparison</h2>
               <div className="grant-size-control">
-                <label htmlFor="grant-size">Grant size:</label>
-                <select
-                  id="grant-size"
-                  value={grantSize}
-                  onChange={(e) => setGrantSize(Number(e.target.value))}
-                  className="grant-size-select"
-                >
-                  <option value={100000}>$100K</option>
-                  <option value={500000}>$500K</option>
-                  <option value={1000000}>$1M</option>
-                  <option value={5000000}>$5M</option>
-                  <option value={10000000}>$10M</option>
-                </select>
+                <label htmlFor="grant-size">Your donation:</label>
+                <div className="grant-size-input-wrapper">
+                  <span className="grant-size-prefix">$</span>
+                  <input
+                    type="text"
+                    id="grant-size"
+                    value={grantSize.toLocaleString()}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      if (value) setGrantSize(Number(value));
+                    }}
+                    className="grant-size-input"
+                    placeholder="1,000,000"
+                  />
+                </div>
               </div>
             </div>
             <p>
