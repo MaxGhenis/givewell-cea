@@ -73,6 +73,10 @@ export interface MoralWeights {
  * GiveWell's default moral weights from November 2025 spreadsheets.
  * These are simplified age-band averages from their more granular curve.
  */
+/** Moral weight slider/input range bounds (shared across all UI controls). */
+export const MORAL_WEIGHT_MIN = 0;
+export const MORAL_WEIGHT_MAX = 200;
+
 export const DEFAULT_MORAL_WEIGHTS: MoralWeights = {
   mode: "manual",
   multiplier: 1.0,
