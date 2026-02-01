@@ -41,7 +41,7 @@ import {
   getAge5PlusWeight,
 } from "../moral-weights";
 
-export { DEFAULT_MORAL_WEIGHTS, MORAL_WEIGHT_PRESETS, getAge5PlusMoralWeight } from "../moral-weights";
+export { DEFAULT_MORAL_WEIGHTS, MORAL_WEIGHT_PRESETS, MORAL_WEIGHT_MIN, MORAL_WEIGHT_MAX, getAge5PlusMoralWeight } from "../moral-weights";
 export type { MoralWeights, MoralWeightPreset, MoralWeightMode } from "../moral-weights";
 
 // Export country data

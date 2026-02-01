@@ -17,6 +17,8 @@ import {
   DEFAULT_DW_INPUTS,
   DEFAULT_MORAL_WEIGHTS,
   MORAL_WEIGHT_PRESETS,
+  MORAL_WEIGHT_MIN,
+  MORAL_WEIGHT_MAX,
   // Country data
   AMF_COUNTRIES,
   AMF_COUNTRY_NAMES,
@@ -141,8 +143,8 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
                   <div className="weight-value-row">
                     <input
                       type="range"
-                      min={50}
-                      max={250}
+                      min={MORAL_WEIGHT_MIN}
+                      max={MORAL_WEIGHT_MAX}
                       step={1}
                       value={weights.under5}
                       onChange={(e) => handleWeightChange("under5", parseFloat(e.target.value))}
@@ -155,8 +157,8 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
                   <div className="weight-value-row">
                     <input
                       type="range"
-                      min={50}
-                      max={250}
+                      min={MORAL_WEIGHT_MIN}
+                      max={MORAL_WEIGHT_MAX}
                       step={1}
                       value={weights.age5to14}
                       onChange={(e) => handleWeightChange("age5to14", parseFloat(e.target.value))}
@@ -169,8 +171,8 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
                   <div className="weight-value-row">
                     <input
                       type="range"
-                      min={30}
-                      max={200}
+                      min={MORAL_WEIGHT_MIN}
+                      max={MORAL_WEIGHT_MAX}
                       step={1}
                       value={weights.age15to49}
                       onChange={(e) => handleWeightChange("age15to49", parseFloat(e.target.value))}
@@ -183,8 +185,8 @@ function MoralWeightsPanel({ weights, onChange, onReset }: MoralWeightsPanelProp
                   <div className="weight-value-row">
                     <input
                       type="range"
-                      min={10}
-                      max={150}
+                      min={MORAL_WEIGHT_MIN}
+                      max={MORAL_WEIGHT_MAX}
                       step={1}
                       value={weights.age50plus}
                       onChange={(e) => handleWeightChange("age50plus", parseFloat(e.target.value))}

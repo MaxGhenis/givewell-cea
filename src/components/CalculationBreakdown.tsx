@@ -12,6 +12,7 @@ import type { HelenKellerInputs } from "../lib/models/helen-keller";
 import type { NewIncentivesInputs } from "../lib/models/new-incentives";
 import type { GiveDirectlyInputs } from "../lib/models/givedirectly";
 import type { DewormingInputs } from "../lib/models/deworming";
+import { MORAL_WEIGHT_MIN, MORAL_WEIGHT_MAX } from "../lib/models";
 import type { CharityInputs, UnifiedResults } from "../lib/models";
 
 // Static value component - for displaying values that can't be edited inline (like grant size)
@@ -286,8 +287,8 @@ function AMFBreakdown({
                 value={inputs.moralWeightUnder5}
                 onChange={(v) => onInputChange("moralWeightUnder5", v)}
                 format="number"
-                min={50}
-                max={200}
+                min={MORAL_WEIGHT_MIN}
+                max={MORAL_WEIGHT_MAX}
                 label="Moral weight"
                 source={{ text: "Units of Value (UoV) per under-5 death averted. Based on ~52 expected life-years saved. GiveWell's moral weights tool allows customization.", url: "https://docs.google.com/spreadsheets/d/11HsJLpq0Suf3SK_PmzzWpK1tr_BTd364j0l3xVvSCQw" }}
               />
@@ -457,8 +458,8 @@ function MCBreakdown({
                 value={inputs.moralWeightUnder5}
                 onChange={(v) => onInputChange("moralWeightUnder5", v)}
                 format="number"
-                min={50}
-                max={200}
+                min={MORAL_WEIGHT_MIN}
+                max={MORAL_WEIGHT_MAX}
                 label="Moral weight"
                 source={{ text: "Units of Value (UoV) per under-5 death averted. Based on ~52 expected life-years saved.", url: "https://docs.google.com/spreadsheets/d/11HsJLpq0Suf3SK_PmzzWpK1tr_BTd364j0l3xVvSCQw" }}
               />
@@ -581,7 +582,7 @@ function HKBreakdown({
             <div className="step-formula">
               <ComputedValue value={intermediates.deathsAverted} format="decimal" />
               {" × "}
-              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={50} max={200} label="Moral weight" source={{ text: "Units of Value per under-5 death averted. Based on ~52 DALYs saved per death averted.", url: "https://docs.google.com/spreadsheets/d/11HsJLpq0Suf3SK_PmzzWpK1tr_BTd364j0l3xVvSCQw" }} />
+              <EditableValue value={inputs.moralWeightUnder5} onChange={(v) => onInputChange("moralWeightUnder5", v)} format="number" min={MORAL_WEIGHT_MIN} max={MORAL_WEIGHT_MAX} label="Moral weight" source={{ text: "Units of Value per under-5 death averted. Based on ~52 DALYs saved per death averted.", url: "https://docs.google.com/spreadsheets/d/11HsJLpq0Suf3SK_PmzzWpK1tr_BTd364j0l3xVvSCQw" }} />
               {" ÷ benchmark = "}
               <ComputedValue value={intermediates.initialCE} format="decimal" />
               {"×"}
@@ -942,8 +943,8 @@ function GDBreakdown({
                 value={inputs.moralWeightUnder5}
                 onChange={(v) => onInputChange("moralWeightUnder5", v)}
                 format="number"
-                min={50}
-                max={200}
+                min={MORAL_WEIGHT_MIN}
+                max={MORAL_WEIGHT_MAX}
                 label="Moral weight"
                 source={{ text: "Units of Value (UoV) per under-5 death averted. Based on ~52 expected life-years saved.", url: "https://docs.google.com/spreadsheets/d/11HsJLpq0Suf3SK_PmzzWpK1tr_BTd364j0l3xVvSCQw" }}
               />
