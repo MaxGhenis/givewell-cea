@@ -46,6 +46,7 @@ import {
   type DWVariant,
 } from "./lib/models";
 import { CalculationBreakdown } from "./components/CalculationBreakdown";
+import { SensitivityAnalysis } from "./components/SensitivityAnalysis";
 import "./App.css";
 
 function formatNumber(n: number, decimals = 1): string {
@@ -305,6 +306,7 @@ function CharityCard({
           </a>
           <div className="charity-name-row">
             <h3>{config.name}</h3>
+            <span className="approx-badge">≈ Approximate</span>
             <span className="charity-range-summary">
               {minX.toFixed(0)}× – {maxX.toFixed(0)}×
             </span>
@@ -612,8 +614,12 @@ function App() {
       <div className="grain-overlay" />
 
       <div className="disclaimer-banner">
-        Independent tool by <a href="https://maxghenis.com">Max Ghenis</a> — not affiliated with GiveWell.
-        See <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">GiveWell's official CEA spreadsheet</a>.
+        <div className="disclaimer-icon">⚠️</div>
+        <div className="disclaimer-text">
+          <strong>Independent approximation</strong> — not an official GiveWell product.
+          Results may differ from <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">GiveWell's official estimates</a> due to parameter extraction timing and simplifications.
+          For donation decisions, use GiveWell's published analyses.
+        </div>
       </div>
 
       <header className="header">
@@ -627,7 +633,7 @@ function App() {
             </p>
           </div>
           <div className="header-meta">
-            <span className="version">November 2025 Model</span>
+            <span className="version">Based on GiveWell Nov 2025 CEA</span>
             <button className="reset-btn" onClick={resetToDefaults}>
               Reset to defaults
             </button>
@@ -694,6 +700,11 @@ function App() {
             onReset={resetMoralWeights}
           />
 
+          <SensitivityAnalysis
+            moralWeights={moralWeights}
+            grantSize={grantSize}
+          />
+
           <div className="methodology-panel">
             <h3>About This Tool</h3>
             <p>
@@ -745,6 +756,12 @@ function App() {
               parameters validated against GiveWell's published spreadsheets
               with 120+ tests.
             </p>
+            <div className="accuracy-note">
+              <strong>Accuracy note:</strong> Country-specific parameters were extracted from
+              an earlier version of GiveWell's spreadsheets and may not reflect the latest updates.
+              The core calculation formulas are validated against GiveWell's methodology
+              with {'>'}120 unit tests. Figures should be treated as approximate.
+            </div>
             <a
               href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness"
               target="_blank"

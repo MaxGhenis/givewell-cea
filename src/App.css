@@ -93,21 +93,36 @@ body {
 
 /* Disclaimer banner */
 .disclaimer-banner {
-  background: var(--color-ink);
-  padding: var(--space-sm) var(--space-xl);
-  text-align: center;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
+  background: #fef3cd;
+  border-bottom: 2px solid #f0c36d;
+  padding: var(--space-md) var(--space-xl);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  font-size: 0.85rem;
+  color: #664d03;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.disclaimer-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.disclaimer-text {
+  line-height: 1.5;
 }
 
 .disclaimer-banner a {
-  color: var(--color-coral-light);
-  text-decoration: none;
-  font-weight: 500;
+  color: #7c4d00;
+  text-decoration: underline;
+  font-weight: 600;
 }
 
 .disclaimer-banner a:hover {
-  text-decoration: underline;
+  color: #543400;
 }
 
 /* Header */
@@ -119,7 +134,7 @@ body {
 .header-inner {
   max-width: 1400px;
   margin: 0 auto;
-  padding: var(--space-2xl) var(--space-xl);
+  padding: var(--space-lg) var(--space-xl);
   display: grid;
   grid-template-columns: 1fr 340px;
   gap: var(--space-xl);
@@ -132,7 +147,7 @@ body {
 
 .header h1 {
   font-family: var(--font-display);
-  font-size: 3rem;
+  font-size: 2.25rem;
   font-weight: 400;
   letter-spacing: -0.02em;
   margin-bottom: var(--space-sm);
@@ -260,9 +275,9 @@ body {
   align-items: center;
   background: var(--color-bg-card);
   border: 2px solid var(--color-ink);
-  border-radius: 2px;
+  border-radius: 4px;
   overflow: hidden;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s ease;
 }
 
 .grant-size-input-wrapper:hover,
@@ -307,10 +322,10 @@ body {
 .charity-card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: 2px;
+  border-radius: 6px;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.2s ease;
 }
 
 .charity-card:hover {
@@ -387,7 +402,7 @@ body {
 
 .expand-btn {
   padding: var(--space-xs) var(--space-sm);
-  border-radius: 2px;
+  border-radius: 4px;
   border: 1px solid var(--color-border-dark);
   background: var(--color-bg-card);
   color: var(--color-text-secondary);
@@ -421,7 +436,7 @@ body {
   position: relative;
   height: 48px;
   background: var(--color-bg);
-  border-radius: 2px;
+  border-radius: 4px;
 }
 
 .range-axis {
@@ -492,10 +507,10 @@ body {
   padding: 6px 10px;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: 2px;
+  border-radius: 4px;
   font-family: var(--font-body);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .locale-chip:hover {
@@ -786,7 +801,7 @@ body {
 .methodology-panel {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: 2px;
+  border-radius: 6px;
   padding: var(--space-lg);
   box-shadow: var(--shadow-sm);
 }
@@ -933,7 +948,7 @@ body {
   padding: var(--space-sm) var(--space-md);
   background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: 2px;
+  border-radius: 4px;
   font-family: var(--font-body);
   font-size: 0.8rem;
   color: var(--color-text-secondary);
@@ -1011,6 +1026,35 @@ body {
   text-decoration: underline;
 }
 
+/* Accuracy note in sidebar */
+.accuracy-note {
+  background: #f0f4f8;
+  border-left: 3px solid #6b7f99;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  border-radius: 0 4px 4px 0;
+  margin-bottom: var(--space-md);
+}
+
+.accuracy-note strong {
+  color: var(--color-text);
+}
+
+/* Approximate badge on charity cards */
+.approx-badge {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 1px 6px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
 /* Footer */
 .footer {
   padding: var(--space-xl);
@@ -1042,8 +1086,8 @@ body {
 }
 
 .disclaimer {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -1673,15 +1717,35 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .header {
-    padding: var(--space-lg);
+    padding: var(--space-md);
   }
 
   .header h1 {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   .main {
-    padding: var(--space-md);
+    padding: var(--space-sm);
+  }
+
+  .disclaimer-banner {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.8rem;
+    gap: var(--space-sm);
+  }
+
+  .disclaimer-icon {
+    font-size: 1rem;
+  }
+
+  .locale-chips {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .locale-chip {
+    flex: 0 0 auto;
   }
 
   .metrics-grid {
@@ -1712,4 +1776,77 @@ body {
   .results-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Sensitivity Analysis Panel */
+.sensitivity-panel {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.sensitivity-panel h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--color-ink);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 2px solid var(--color-ink);
+}
+
+.sensitivity-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.sensitivity-controls label {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.sensitivity-controls select {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  flex: 1;
+}
+
+svg.sensitivity-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: var(--space-sm);
+}
+
+.sensitivity-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+}
+
+.sensitivity-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+}
+
+.sensitivity-legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 3px;
+  border-radius: 1px;
 }
