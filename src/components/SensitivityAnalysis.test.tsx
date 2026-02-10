@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { SensitivityAnalysis, runSensitivitySweep } from "./SensitivityAnalysis";
+import { SensitivityAnalysis } from "./SensitivityAnalysis";
+import { runSensitivitySweep } from "../lib/sensitivity";
 import { DEFAULT_MORAL_WEIGHTS, CHARITY_CONFIGS } from "../lib/models";
 
 describe("runSensitivitySweep", () => {

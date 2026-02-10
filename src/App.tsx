@@ -559,6 +559,7 @@ function App() {
 
   // Helper to compute all country results for a charity type (uses global grantSize)
   const getAllCountryResults = useCallback((charityType: CharityType): { country: string; label: string; xBenchmark: number }[] => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const computeForCountry = (country: string, label: string, getInputsFn: (c: any, g: number) => any): { country: string; label: string; xBenchmark: number } => {
       const inputs = getInputsFn(country, grantSize);
       const charityInput = { type: charityType, inputs } as CharityInputs;
@@ -585,6 +586,7 @@ function App() {
 
   // Memoized all-country results for each charity
   const allCountryResultsByCharity = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const results: Record<CharityType, { country: string; label: string; xBenchmark: number }[]> = {} as any;
     for (const config of CHARITY_CONFIGS) {
       results[config.type] = getAllCountryResults(config.type);
