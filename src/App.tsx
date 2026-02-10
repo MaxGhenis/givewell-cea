@@ -428,6 +428,7 @@ type SelectedCountries = {
 };
 
 function App() {
+  const [disclaimerDismissed, setDisclaimerDismissed] = useState(false);
   const [expandedCharity, setExpandedCharity] = useState<CharityType | null>(null);
 
   // Country selection state - start with no locale selected
@@ -613,15 +614,6 @@ function App() {
     <div className="app">
       <div className="grain-overlay" />
 
-      <div className="disclaimer-banner">
-        <div className="disclaimer-icon">⚠️</div>
-        <div className="disclaimer-text">
-          <strong>Independent approximation</strong> — not an official GiveWell product.
-          Results may differ from <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">GiveWell's official estimates</a> due to parameter extraction timing and simplifications.
-          For donation decisions, use GiveWell's published analyses.
-        </div>
-      </div>
-
       <header className="header">
         <div className="header-inner">
           <div className="header-content">
@@ -640,6 +632,18 @@ function App() {
           </div>
         </div>
       </header>
+
+      {!disclaimerDismissed && (
+        <div className="disclaimer-banner">
+          <div className="disclaimer-icon">⚠️</div>
+          <div className="disclaimer-text">
+            <strong>Independent approximation</strong> — not an official GiveWell product.
+            Results may differ from <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">GiveWell's official estimates</a> due to parameter extraction timing and simplifications.
+            For donation decisions, use GiveWell's published analyses.
+          </div>
+          <button className="disclaimer-dismiss" onClick={() => setDisclaimerDismissed(true)} aria-label="Dismiss">×</button>
+        </div>
+      )}
 
       <main className="main">
         <section className="charities-section">

@@ -101,8 +101,23 @@ body {
   gap: var(--space-md);
   font-size: 0.85rem;
   color: #664d03;
-  max-width: 1400px;
-  margin: 0 auto;
+}
+
+.disclaimer-dismiss {
+  background: none;
+  border: none;
+  color: #664d03;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+}
+
+.disclaimer-dismiss:hover {
+  opacity: 1;
 }
 
 .disclaimer-icon {
