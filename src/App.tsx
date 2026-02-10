@@ -367,10 +367,10 @@ function CharityCard({
             <span className="chip-value">{cr.xBenchmark.toFixed(1)}×</span>
           </button>
         ))}
-        {!selectedCountry && (
-          <span className="chips-hint">Click a country to explore details</span>
-        )}
       </div>
+      {!selectedCountry && (
+        <p className="chips-hint">Click a country to explore details</p>
+      )}
 
       {/* Expanded details - shown when a locale is selected */}
       {isExpanded && selectedCountry && (
@@ -405,9 +405,9 @@ function CharityCard({
           </div>
 
           <div className="calculation-breakdown-section">
-            <h4 className="breakdown-heading">How it's calculated</h4>
+            <h5 className="breakdown-heading">How it's calculated</h5>
             <p className="param-description">{config.description}</p>
-            <p className="edit-hint">Click any highlighted value to adjust it.</p>
+            <p className="edit-hint">Click any highlighted value to edit it.</p>
             <CalculationBreakdown
               charityInputs={charityInputs}
               results={results}
