@@ -630,7 +630,7 @@ function App() {
             </p>
           </div>
           <div className="header-meta">
-            <span className="version">Based on GiveWell Nov 2025 CEA</span>
+            <span className="version">Based on GiveWell Dec 2024 CEA</span>
             <button className="reset-btn" onClick={resetToDefaults}>
               Reset to defaults
             </button>
@@ -643,9 +643,8 @@ function App() {
           <div className="disclaimer-banner">
             <span className="disclaimer-icon">⚠️</span>
             <span className="disclaimer-text">
-              <strong>Independent approximation</strong> — not affiliated with GiveWell.
-              Results may differ from <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">official estimates</a>.
-              For donation decisions, use GiveWell's published analyses.
+              <strong>Independent approximation</strong> — not affiliated with GiveWell. Uses older parameters (Dec 2024) with known inaccuracies.
+              For donation decisions, use <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">GiveWell's official estimates</a>.
             </span>
             <button className="disclaimer-dismiss" onClick={() => setDisclaimerDismissed(true)} aria-label="Dismiss">×</button>
           </div>
@@ -719,9 +718,9 @@ function App() {
           <div className="methodology-panel">
             <h3>About This Tool</h3>
             <p>
-              An independent, open-source calculator replicating GiveWell's
+              An independent, open-source calculator approximating GiveWell's
               cost-effectiveness methodology for their top charities
-              (November 2024-2025 CEA):
+              (parameters from December 2024 CEA):
             </p>
             <ul className="charity-list">
               {CHARITY_CONFIGS.map((config) => (
@@ -762,16 +761,14 @@ function App() {
                 </li>
               ))}
             </ul>
-            <p>
-              Each charity uses a different calculation model with unique
-              parameters validated against GiveWell's published spreadsheets
-              with 120+ tests.
-            </p>
             <div className="accuracy-note">
-              <strong>Accuracy note:</strong> Country-specific parameters were extracted from
-              an earlier version of GiveWell's spreadsheets and may not reflect the latest updates.
-              The core calculation formulas are validated against GiveWell's methodology
-              with {'>'}120 unit tests. Figures should be treated as approximate.
+              <strong>Known limitations:</strong> Parameters were extracted from
+              GiveWell's December 2024 spreadsheets and have not been updated to
+              the November 2025 versions. Some mortality rates may use raw rather
+              than derived values, and the New Incentives model overstates
+              cost-effectiveness. Figures are directionally useful for exploring
+              how assumptions affect rankings, but should not be used for
+              donation decisions.
             </div>
             <a
               href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness"
@@ -791,7 +788,7 @@ function App() {
           <a href="https://maxghenis.com">Max Ghenis</a> (not affiliated with GiveWell).{" "}
           Data from{" "}
           <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">
-            GiveWell's November 2025 CEA
+            GiveWell's CEA spreadsheets
           </a>.
           <br />
           <a href="https://github.com/MaxGhenis/givewell-cea" className="github-link">

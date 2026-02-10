@@ -8,6 +8,10 @@
  * - Leverage and funging adjustments
  *
  * Data extracted from GiveWell's CEA spreadsheets (December 2024).
+ * NOTE: These parameters are outdated and have known inaccuracies:
+ * - Mortality rates may use raw values instead of derived rates
+ * - New Incentives model overstates cost-effectiveness
+ * - Missing countries/regions added in Nov 2025 spreadsheets
  * Source: https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness/cost-effectiveness-models
  */
 
