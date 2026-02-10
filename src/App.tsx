@@ -367,6 +367,9 @@ function CharityCard({
             <span className="chip-value">{cr.xBenchmark.toFixed(1)}×</span>
           </button>
         ))}
+        {!selectedCountry && (
+          <span className="chips-hint">Click a country to explore details</span>
+        )}
       </div>
 
       {/* Expanded details - shown when a locale is selected */}
@@ -670,7 +673,7 @@ function App() {
             </div>
             <p>
               Cost-effectiveness expressed as multiples of GiveWell's benchmark
-              (unconditional cash transfers). Click "Edit" to adjust parameters.
+              (unconditional cash transfers). Click a country to see details and edit parameters.
             </p>
           </div>
 

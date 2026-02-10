@@ -556,6 +556,15 @@ body {
   color: var(--chip-color, var(--color-coral));
 }
 
+.chips-hint {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: 4px 8px;
+}
+
 /* Expanded details panel */
 .charity-details {
   padding: var(--space-lg);
