@@ -92,14 +92,19 @@ body {
 }
 
 /* Disclaimer banner */
-.disclaimer-banner {
+.disclaimer-banner-wrap {
   background: #fef3cd;
-  border-bottom: 2px solid #f0c36d;
-  padding: var(--space-md) var(--space-xl);
+  border-bottom: 1px solid #f0c36d;
+}
+
+.disclaimer-banner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-xs) var(--space-xl);
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-md);
-  font-size: 0.85rem;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.75rem;
   color: #664d03;
 }
 
@@ -121,13 +126,13 @@ body {
 }
 
 .disclaimer-icon {
-  font-size: 1.2rem;
+  font-size: 0.85rem;
   flex-shrink: 0;
-  line-height: 1.4;
+  line-height: 1;
 }
 
 .disclaimer-text {
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .disclaimer-banner a {
@@ -1753,13 +1758,9 @@ body {
   }
 
   .disclaimer-banner {
-    padding: var(--space-sm) var(--space-md);
-    font-size: 0.8rem;
-    gap: var(--space-sm);
-  }
-
-  .disclaimer-icon {
-    font-size: 1rem;
+    padding: var(--space-xs) var(--space-md);
+    font-size: 0.7rem;
+    gap: var(--space-xs);
   }
 
   .locale-chips {

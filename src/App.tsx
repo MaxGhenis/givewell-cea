@@ -639,14 +639,16 @@ function App() {
       </header>
 
       {!disclaimerDismissed && (
-        <div className="disclaimer-banner">
-          <div className="disclaimer-icon">⚠️</div>
-          <div className="disclaimer-text">
-            <strong>Independent approximation</strong> — not an official GiveWell product.
-            Results may differ from <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">GiveWell's official estimates</a> due to parameter extraction timing and simplifications.
-            For donation decisions, use GiveWell's published analyses.
+        <div className="disclaimer-banner-wrap">
+          <div className="disclaimer-banner">
+            <span className="disclaimer-icon">⚠️</span>
+            <span className="disclaimer-text">
+              <strong>Independent approximation</strong> — not affiliated with GiveWell.
+              Results may differ from <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">official estimates</a>.
+              For donation decisions, use GiveWell's published analyses.
+            </span>
+            <button className="disclaimer-dismiss" onClick={() => setDisclaimerDismissed(true)} aria-label="Dismiss">×</button>
           </div>
-          <button className="disclaimer-dismiss" onClick={() => setDisclaimerDismissed(true)} aria-label="Dismiss">×</button>
         </div>
       )}
 
