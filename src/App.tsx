@@ -306,7 +306,7 @@ function CharityCard({
           </a>
           <div className="charity-name-row">
             <h3>{config.name}</h3>
-            <span className="approx-badge">≈ Approximate</span>
+            <span className="approx-badge">Nov 2025</span>
             <span className="charity-range-summary">
               {minX.toFixed(0)}× – {maxX.toFixed(0)}×
             </span>
@@ -630,7 +630,7 @@ function App() {
             </p>
           </div>
           <div className="header-meta">
-            <span className="version">Based on GiveWell Dec 2024 CEA</span>
+            <span className="version">Based on GiveWell Nov 2025 CEA</span>
             <button className="reset-btn" onClick={resetToDefaults}>
               Reset to defaults
             </button>
@@ -643,7 +643,7 @@ function App() {
           <div className="disclaimer-banner">
             <span className="disclaimer-icon">⚠️</span>
             <span className="disclaimer-text">
-              <strong>Independent approximation</strong> — not affiliated with GiveWell. Uses older parameters (Dec 2024) with known inaccuracies.
+              <strong>Independent approximation</strong> — not affiliated with GiveWell. Parameters from GiveWell's November 2025 CEA spreadsheets.
               For donation decisions, use <a href="https://docs.google.com/spreadsheets/d/1VEtie59TgRvZSEVjfG7qcKBKcQyJn8zO91Lau9YNqXc" target="_blank" rel="noopener noreferrer">GiveWell's official estimates</a>.
             </span>
             <button className="disclaimer-dismiss" onClick={() => setDisclaimerDismissed(true)} aria-label="Dismiss">×</button>
@@ -720,7 +720,7 @@ function App() {
             <p>
               An independent, open-source calculator approximating GiveWell's
               cost-effectiveness methodology for their top charities
-              (parameters from December 2024 CEA):
+              (parameters from November 2025 CEA):
             </p>
             <ul className="charity-list">
               {CHARITY_CONFIGS.map((config) => (
@@ -762,13 +762,12 @@ function App() {
               ))}
             </ul>
             <div className="accuracy-note">
-              <strong>Known limitations:</strong> Parameters were extracted from
-              GiveWell's December 2024 spreadsheets and have not been updated to
-              the November 2025 versions. Some mortality rates may use raw rather
-              than derived values, and the New Incentives model overstates
-              cost-effectiveness. Figures are directionally useful for exploring
-              how assumptions affect rankings, but should not be used for
-              donation decisions.
+              <strong>Note:</strong> Parameters extracted from GiveWell's November
+              2025 CEA spreadsheets. Figures closely approximate GiveWell's
+              published estimates but may not match exactly due to rounding
+              and simplifications. GiveDirectly and deworming programs use
+              older parameter extractions. Not a substitute for GiveWell's
+              official analyses.
             </div>
             <a
               href="https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness"
