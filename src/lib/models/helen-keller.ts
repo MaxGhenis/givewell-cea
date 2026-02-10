@@ -14,7 +14,7 @@
  *
  * Note: Helen Keller spreadsheet uses 0.003355.
  */
-export const BENCHMARK_VALUE_PER_DOLLAR = 0.003355;
+export const BENCHMARK_VALUE_PER_DOLLAR = 0.0033545;
 
 export interface HelenKellerInputs {
   /** Grant size in USD */

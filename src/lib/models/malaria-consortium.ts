@@ -16,7 +16,7 @@
  * Note: Malaria Consortium spreadsheet uses 0.003355, which differs from
  * AMF (0.00333). This may reflect different update cycles for the spreadsheets.
  */
-export const BENCHMARK_VALUE_PER_DOLLAR = 0.003355;
+export const BENCHMARK_VALUE_PER_DOLLAR = 0.0033545;
 
 export interface MalariaConsortiumInputs {
   /** Grant size in USD */
