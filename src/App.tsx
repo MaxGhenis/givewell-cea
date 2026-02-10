@@ -404,16 +404,16 @@ function CharityCard({
             </div>
           </div>
 
-          <details className="calculation-details">
-            <summary>Edit calculation parameters</summary>
+          <div className="calculation-breakdown-section">
+            <h4 className="breakdown-heading">How it's calculated</h4>
             <p className="param-description">{config.description}</p>
-            <p className="edit-hint">Click any highlighted value below to edit it.</p>
+            <p className="edit-hint">Click any highlighted value to adjust it.</p>
             <CalculationBreakdown
               charityInputs={charityInputs}
               results={results}
               onInputChange={onInputChange}
             />
-          </details>
+          </div>
         </div>
       )}
     </div>
