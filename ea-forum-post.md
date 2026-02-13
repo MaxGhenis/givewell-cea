@@ -2,7 +2,7 @@
 
 I re-implemented GiveWell's cost-effectiveness models for all six top charities as an open-source web tool: **[maxghenis.com/givewell-cea](https://maxghenis.com/givewell-cea)**
 
-[UPLOAD: screenshots/overview.png — overview showing all six charities with country-level ranges]
+![Overview showing all six charities with country-level cost-effectiveness ranges](https://raw.githubusercontent.com/MaxGhenis/givewell-cea/master/screenshots/overview.png)
 
 The tool lets you edit any parameter and immediately see the effect on charity rankings.
 
@@ -12,7 +12,7 @@ Others have done excellent work examining specific parts of GiveWell's CEA — [
 
 GiveWell's spreadsheets are powerful but hard to explore casually. Each charity has its own multi-tab workbook with dozens of sheets, specialized terminology, and cross-references between cells:
 
-[UPLOAD: screenshots/givewell-spreadsheet.png — GiveWell's AMF spreadsheet showing the Key sheet with multiple tabs and terminology definitions]
+![GiveWell's AMF cost-effectiveness spreadsheet showing multiple sheet tabs and terminology definitions](https://raw.githubusercontent.com/MaxGhenis/givewell-cea/master/screenshots/givewell-spreadsheet.png)
 
 Changing a moral weight means editing cells across multiple sheets and comparing results manually. I wanted something where you could adjust one slider and immediately see how all six charities re-rank.
 
@@ -90,7 +90,7 @@ Parameters are extracted from GiveWell's November 2025 CEA spreadsheets ([AMF](h
 
 ## Interactive features
 
-[UPLOAD: screenshots/detail-view.png — expanded detail view showing AMF in DRC at 14.7x with step-by-step calculation]
+![Expanded view showing AMF in DRC with the step-by-step calculation breakdown and editable parameters](https://raw.githubusercontent.com/MaxGhenis/givewell-cea/master/screenshots/detail-view.png)
 
 **Calculation breakdown**: Click any country to see the step-by-step calculation with every intermediate value. Click any highlighted number to edit it.
 
@@ -212,5 +212,6 @@ For donation decisions, use [GiveWell's published estimates](https://www.givewel
 
 **Tool**: [maxghenis.com/givewell-cea](https://maxghenis.com/givewell-cea)
 **Source code**: [github.com/MaxGhenis/givewell-cea](https://github.com/MaxGhenis/givewell-cea)
+**Blog post**: [maxghenis.com/blog/givewell-cea](https://maxghenis.com/blog/givewell-cea/)
 
-I'd welcome feedback on accuracy, missing features, or observations from playing with the parameters. In particular, if anyone has views on whether the moral weight sensitivity patterns align with your intuitions, I'd be curious to hear.
+Feedback welcome on accuracy, missing features, or observations from playing with the parameters.
