@@ -1,4 +1,4 @@
-# Replicating GiveWell's cost-effectiveness analysis in code: an interactive calculator and what I learned
+# Interactive replication of GiveWell's cost-effectiveness analysis
 
 I re-implemented GiveWell's cost-effectiveness models for all six top charities as an open-source web tool: **[maxghenis.com/givewell-cea](https://maxghenis.com/givewell-cea)**
 
